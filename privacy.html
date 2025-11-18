@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Media Grabber Pro - Gizlilik Politikası</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #0f172a;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: var(--secondary);
+            font-size: 1.4rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        strong { color: var(--primary); }
+
+        .note {
+            background: #f0f9ff;
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .toggle-lang {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10;
+        }
+        .toggle-lang:hover { background: var(--primary-dark); }
+        
+        .footer {
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="toggle-lang" id="langToggle" onclick="toggleLanguage()">English / Türkçe</button>
+
+    <div class="container">
+        
+        <div id="policy-tr">
+            <h1>GİZLİLİK POLİTİKASI (TÜRKÇE)</h1>
+            <p><strong>Universal Media Grabber Pro</strong> eklentisi, kullanıcı gizliliğini korumak ve şeffaf olmak amacıyla bu politikayı yayınlamaktadır. Eklentimiz, kullanıcılardan hiçbir kişisel veri **TOPLAMAZ** ve **UZAK SUNUCULARA İLETMEZ**.</p>
+
+            <div class="note">
+                Bu uzantının tek ve temel amacı, web sayfalarındaki medya dosyalarının indirilmesini kolaylaştırmaktır. Tüm veri işleme işlemleri, cihazınızda yerel olarak gerçekleşir.
+            </div>
+
+            <h2>1. Veri İşleme ve Depolama</h2>
+            <ul>
+                <li><strong>Ağ Etkinliği:</strong> Eklenti, yalnızca medya dosyalarının (MP3, WAV, M4A vb.) gizli URL adreslerini tespit etmek amacıyla tarayıcı ağ trafiğini (HTTP başlıkları ve URL’leri) geçici olarak analiz eder. Bu analiz, cihazınızda yerel olarak yapılır.</li>
+                <li><strong>Toplanan Bilgiler:</strong>
+                    <ul>
+                        <li>Yakalanan Medya URL'leri (Linkler)</li>
+                        <li>Kullanıcı tarafından belirlenen Dosya Adları (Örn: Surenin_Adi.mp3)</li>
+                        <li>Eklenti Ayarları (Örn: İndirme Klasörü Adı)</li>
+                    </ul>
+                </li>
+                <li><strong>Depolama Konumu:</strong> Toplanan tüm bu bilgiler, kullanıcının cihazında, Chrome’un yerel depolama alanı (<code style="color:var(--primary);">chrome.storage.local</code>) içinde saklanır. Bu veriler asla bizim sunucularımıza veya üçüncü taraflara gönderilmez.</li>
+            </ul>
+
+            <h2>2. Üçüncü Taraf Hizmetleri ve Güvenlik</h2>
+            <ul>
+                <li><strong>Üçüncü Taraf:</strong> Eklenti, herhangi bir analitik (Google Analytics), reklam veya üçüncü taraf izleme hizmeti kullanmaz.</li>
+                <li><strong>Kişisel Bilgiler (PII):</strong> Eklenti, adınız, e-posta adresiniz, şifreniz veya konumunuz gibi kişisel olarak tanımlanabilir hiçbir bilgiyi toplamaz.</li>
+                <li><strong>Açık Kaynak:</strong> Eklentimiz açık kaynaklıdır, kodları <a href="https://github.com/muallimun/MediaGrabberPro" target="_blank" style="color:var(--primary);">GitHub</a> üzerinden herkes tarafından incelenebilir.</li>
+            </ul>
+
+            <h2>3. İletişim Bilgileri</h2>
+            <p>Gizlilik politikamızla ilgili herhangi bir sorunuz olursa, lütfen geliştirici ile iletişime geçin:</p>
+            <p>E-posta: [Lütfen iletişim e-postanızı buraya ekleyin]</p>
+        </div>
+
+        <div id="policy-en" style="display:none;">
+            <h1>PRIVACY POLICY (ENGLISH)</h1>
+            <p>The <strong>Universal Media Grabber Pro</strong> extension is committed to protecting user privacy. This policy outlines our practices concerning data handling. Our extension **DOES NOT COLLECT** any personal data and **DOES NOT TRANSMIT** data to external servers.</p>
+
+            <div class="note">
+                The sole and fundamental purpose of this extension is to facilitate the download of media files from web pages. All data processing occurs locally on your device.
+            </div>
+
+            <h2>1. Data Processing and Storage</h2>
+            <ul>
+                <li><strong>Network Activity:</strong> The extension temporarily analyzes browser network traffic (HTTP headers and URLs) solely for the purpose of identifying the hidden addresses of media files (MP3, WAV, M4A, etc.). This analysis is performed locally on your device.</li>
+                <li><strong>Information Handled:</strong>
+                    <ul>
+                        <li>Captured Media URLs (Links)</li>
+                        <li>User-defined Filenames (e.g., Track_Name.mp3)</li>
+                        <li>Extension Settings (e.g., Download Folder Name)</li>
+                    </ul>
+                </li>
+                <li><strong>Storage Location:</strong> All captured information is stored locally on the user's device within Chrome's local storage (<code style="color:var(--primary);">chrome.storage.local</code>). This data is never sent to our servers or third parties.</li>
+            </ul>
+
+            <h2>2. Third-Party Services and Security</h2>
+            <ul>
+                <li><strong>Third Parties:</strong> The extension does not use any analytics, advertising, or third-party tracking services.</li>
+                <li><strong>Personal Information (PII):</strong> The extension does not collect any personally identifiable information, such as your name, email address, password, or location.</li>
+                <li><strong>Open Source:</strong> Our extension is open-source, and its code can be inspected by anyone on <a href="https://github.com/muallimun/MediaGrabberPro" target="_blank" style="color:var(--primary);">GitHub</a>.</li>
+            </ul>
+
+            <h2>3. Contact Information</h2>
+            <p>If you have any questions regarding our privacy policy, please contact the developer:</p>
+            <p>Email: [Please insert your contact email here]</p>
+        </div>
+        
+        <div class="footer">
+            Telif Hakkı © 2025 Muallimun.Net | Son Güncelleme: 19 Kasım 2025
+        </div>
+    </div>
+
+    <script>
+        // Dil değiştirme fonksiyonu
+        function toggleLanguage() {
+            const tr = document.getElementById('policy-tr');
+            const en = document.getElementById('policy-en');
+            const toggleBtn = document.getElementById('langToggle');
+
+            if (tr.style.display === 'none') {
+                tr.style.display = 'block';
+                en.style.display = 'none';
+                toggleBtn.textContent = 'English / Türkçe';
+            } else {
+                tr.style.display = 'none';
+                en.style.display = 'block';
+                toggleBtn.textContent = 'Türkçe / English';
+            }
+        }
+        
+        // Tarayıcı dilini kontrol et ve varsayılan dili ayarla (TR veya EN)
+        document.addEventListener('DOMContentLoaded', () => {
+            const userLang = (navigator.language || navigator.userLanguage).substring(0, 2);
+            if (userLang === 'en') {
+                document.getElementById('policy-tr').style.display = 'none';
+                document.getElementById('policy-en').style.display = 'block';
+                document.getElementById('langToggle').textContent = 'Türkçe / English';
+            } else {
+                 document.getElementById('policy-tr').style.display = 'block';
+                 document.getElementById('policy-en').style.display = 'none';
+                 document.getElementById('langToggle').textContent = 'English / Türkçe';
+            }
+        });
+    </script>
+</body>
+</html>
