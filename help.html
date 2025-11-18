@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Media Grabber Pro - Kullanım Kılavuzu</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background-color: #f8f9fa; color: #333; 
+            margin: 0; padding: 40px; line-height: 1.6;
+        }
+        .container { 
+            max-width: 800px; margin: 0 auto; background: white; 
+            padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 15px; display: flex; align-items: center; gap: 15px;}
+        h2 { color: #2980b9; margin-top: 30px; font-size: 20px; display: flex; align-items: center; gap: 10px;}
+        
+        .step { display: flex; gap: 15px; margin-bottom: 20px; background: #f1f8ff; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; }
+        .step-num { font-weight: bold; font-size: 24px; color: #3498db; line-height: 1; }
+        .step-content { flex: 1; }
+        
+        .icon-box { 
+            display: inline-flex; align-items: center; justify-content: center; 
+            width: 24px; height: 24px; background: #eee; border-radius: 4px; vertical-align: middle;
+        }
+        
+        .warning { background: #fff5f5; border-left: 5px solid #e74c3c; padding: 15px; margin: 20px 0; color: #c0392b; }
+        .tip { background: #fffbeb; border-left: 5px solid #f1c40f; padding: 15px; margin: 20px 0; color: #977603; }
+        
+        code { background: #eee; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; color: #d35400; }
+        
+        footer { text-align: center; margin-top: 50px; font-size: 12px; color: #95a5a6; border-top: 1px solid #eee; padding-top: 20px;}
+        a { color: #3498db; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        Media Grabber Pro - Kullanım Kılavuzu
+    </h1>
+
+    <p>Bu eklenti, web sayfalarındaki ses dosyalarını (MP3, WAV, M4A) otomatik olarak algılayan, isimlendiren ve indirmenizi sağlayan profesyonel bir araçtır.</p>
+
+    <h2>🚀 Hızlı Başlangıç</h2>
+
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <strong>Medyayı Oynatın</strong><br>
+            Herhangi bir sitede (Radyo, Podcast vb.) dinlemek istediğiniz dosyayı oynatın. Eklenti, dosyayı ve ismini <strong>otomatik</strong> olarak yakalar.
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <strong>Listeyi Kontrol Edin</strong><br>
+            Sağ üstteki eklenti simgesine tıklayın. Yakalanan dosyalar listede görünecektir.
+            Dosya adını değiştirmek isterseniz <span class="icon-box">✏️</span> ikonuna tıklayın.
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <strong>İndirin</strong><br>
+            Tek bir dosyayı indirmek için yanındaki <span class="icon-box">⬇</span> ikonuna basın.<br>
+            Hepsini indirmek için en alttaki <strong>TÜMÜNÜ İNDİR</strong> butonunu kullanın.
+        </div>
+    </div>
+
+    <h2>⚙️ Özellikler ve Butonlar</h2>
+    <ul>
+        <li><span class="icon-box">▶</span> <strong>Önizleme:</strong> Dosyayı indirmeden eklenti içinde dinlemenizi sağlar.</li>
+        <li><span class="icon-box">📋</span> <strong>Kopyala:</strong> Dosyanın indirme bağlantısını panoya kopyalar (IDM vb. için).</li>
+        <li><span class="icon-box">📂</span> <strong>Klasör:</strong> İndirilen dosyanın bulunduğu klasörü açar.</li>
+        <li><span class="icon-box">⚙️</span> <strong>Ayarlar:</strong> İndirme klasörünün adını ve liste dosyası adını değiştirmenizi sağlar.</li>
+        <li><span class="icon-box">📦</span> <strong>ZIP:</strong> Tüm listeyi sıkıştırıp tek bir ZIP dosyası olarak indirir.</li>
+    </ul>
+
+    <div class="warning">
+        <strong>⚠️ Önemli Uyarı (Toplu İndirme İçin):</strong><br>
+        700+ dosyayı tek seferde sorunsuz indirmek için Chrome tarayıcınızda şu ayarı yapmalısınız:<br>
+        <code>Ayarlar > İndirmeler > "İndirmeden önce her dosyanın nereye kaydedileceğini sor"</code> seçeneğini <strong>KAPALI</strong> duruma getirin.
+    </div>
+
+    <div class="tip">
+        <strong>💡 İpucu:</strong> Eğer otomatik indirme başlamazsa, eklenti dosyayı yeni bir sekmede açar ve ismini kopyalar. Siyah ekranda <code>Ctrl + S</code> yapıp, isim kısmına <code>Ctrl + V</code> yapmanız yeterlidir.
+    </div>
+
+    <footer>
+        Developed by <a href="https://www.muallimun.com/" target="_blank">Muallimun.Net</a>
+    </footer>
+</div>
+
+</body>
+</html>
