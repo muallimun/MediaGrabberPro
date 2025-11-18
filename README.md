@@ -27,7 +27,7 @@ Bu eklenti, sıradan indiricilerin yapamadığını yapar ve kullanıcı deneyim
 | **🕵️‍♂️ Akıllı Yakalama** | Bir medyayı oynattığınız anda ağ trafiğini dinler ve linki havada yakalar. |
 | **🏷️ Akıllı İsimlendirme** | `"Dosya.mp3"` gibi anlamsız isimler yerine, tıkladığınız başlığı veya sayfa içeriğini analiz ederek dosyayı doğru isimlendirir (Örn: `001_Fatiha_Suresi.mp3`). |
 | **📦 Toplu İndirme** | Listelenen 100'lerce dosyayı tek tıkla sırayla indirir veya ZIP olarak paketler. |
-| **📁 Klasörleme** | İndirilen dosyaları `İndirilenler/Radyo_Arsiv` (veya sizin belirlediğiniz) klasöründe düzenli bir şekilde toplar. |
+| **📁 Klasörleme** | İndirilen dosyaları `indirilenler/MediaGrabber_Downloads` (veya sizin belirlediğiniz) klasöründe düzenli bir şekilde toplar. |
 | **🎧 Dahili Oynatıcı** | Dosyayı indirmeden önce eklenti penceresinde dinlemenizi sağlar. |
 | **🌍 Çoklu Dil** | Türkçe ve İngilizce dillerini tarayıcınıza göre otomatik tanır. |
 | **🛡️ Çift Kayıt Koruması** | Aynı dosyayı listeye tekrar tekrar eklemez, listenizi temiz tutar. |
