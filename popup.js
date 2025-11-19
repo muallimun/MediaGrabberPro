@@ -12,11 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsToggle = document.getElementById('settingsToggle');
     const settingsPanel = document.getElementById('settingsPanel');
     const saveSettingsBtn = document.getElementById('saveSettings');
+    const closePopupBtn = document.getElementById('closePopup'); // YENİ
     
     const footerControls = document.getElementById('footerControls');
     const searchBox = document.getElementById('searchBox');
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
+
+    // Video Modal
+    const videoModal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const closeVideoBtn = document.getElementById('closeVideoBtn');
 
     let currentAudio = null;
     let currentPlayBtn = null;
@@ -30,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
         copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
         edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
         del: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-        musicNote: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`
+        musicNote: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`,
+        videoIcon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>`
     };
 
     function showToast(msg, isError = false) {
@@ -39,6 +46,20 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.style.background = isError ? "#dc2626" : "#1e293b";
         toast.className = "show";
         setTimeout(() => { toast.className = ""; }, 2500);
+    }
+
+    // KAPATMA BUTONU
+    if (closePopupBtn) {
+        closePopupBtn.onclick = () => window.close();
+    }
+
+    // Video Kapat
+    if(closeVideoBtn) {
+        closeVideoBtn.onclick = () => {
+            videoModal.style.display = 'none';
+            videoPlayer.pause();
+            videoPlayer.src = "";
+        };
     }
 
     // PANELLER
@@ -109,7 +130,17 @@ document.addEventListener('DOMContentLoaded', () => {
         renderListUI(filtered);
     });
 
-    function toggleAudio(url, btn) {
+    // OYNATICI (Video ve Müzik)
+    function toggleAudio(url, btn, type) {
+        // Video ise Modal Aç
+        if (type === 'video') {
+            if(currentAudio) currentAudio.pause();
+            videoPlayer.src = url;
+            videoModal.style.display = "flex";
+            videoPlayer.play();
+            return;
+        }
+
         if (currentAudio) {
             currentAudio.pause();
             if (currentPlayBtn) {
@@ -154,22 +185,26 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = 'item';
             if (selectedUrls.has(item.url)) div.classList.add('selected');
 
+            // TİP BELİRLEME (VİDEO MU?)
+            const isVideo = item.type === 'video' || item.filename.endsWith('.mp4');
+            const fileIcon = isVideo ? icons.videoIcon : icons.musicNote;
+
             div.innerHTML = `
                 <div class="check-col">
                     <input type="checkbox" class="item-checkbox" data-url="${item.url}">
                 </div>
                 <div class="info-col">
-                    <div class="file-icon">${icons.musicNote}</div>
+                    <div class="file-icon">${fileIcon}</div>
                     <div class="file-details">
                         <span class="name" title="${item.filename}">${item.filename}</span>
                         <div class="meta">
-                            <span class="tag">${item.size || '? MB'}</span>
+                            <span class="tag">${isVideo ? 'VIDEO' : (item.size || '? MB')}</span>
                             <span title="${item.url}" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${new URL(item.url).hostname}</span>
                         </div>
                     </div>
                 </div>
                 <div class="action-col">
-                    <button class="icon-btn play-btn" title="Dinle">${icons.play}</button>
+                    <button class="icon-btn play-btn" title="${isVideo ? 'İzle' : 'Dinle'}">${icons.play}</button>
                     <button class="icon-btn edit-btn" title="İsim Değiştir">${icons.edit}</button>
                     <button class="icon-btn copy-btn" title="Link Kopyala">${icons.copy}</button>
                     <button class="icon-btn dl-btn" title="İndir">${icons.dl}</button>
@@ -186,10 +221,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateDownloadButton();
             };
             
-            div.querySelector('.play-btn').onclick = function() { toggleAudio(item.url, this); };
+            // OYNATMA BUTONU
+            div.querySelector('.play-btn').onclick = function() { 
+                if(isVideo) {
+                    if(currentAudio) currentAudio.pause();
+                    videoPlayer.src = item.url;
+                    videoModal.style.display = "flex";
+                    videoPlayer.play();
+                } else {
+                    toggleAudio(item.url, this, 'audio'); 
+                }
+            };
+
             div.querySelector('.copy-btn').onclick = function() { navigator.clipboard.writeText(item.url); showToast("Link Kopyalandı"); };
             div.querySelector('.edit-btn').onclick = function() {
-                const newName = prompt("Yeni dosya adı:", item.filename.replace(/\.mp3$/i, ''));
+                const newName = prompt("Yeni dosya adı:", item.filename.replace(/\.(mp3|mp4)$/i, ''));
                 if (newName) {
                     chrome.runtime.sendMessage({action: "RENAME_ITEM", url: item.url, newName: newName}, (res) => {
                         if(res.status === "Renamed") { showToast("İsim Güncellendi"); fetchAndRender(); }
@@ -211,8 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             };
+
             listDiv.appendChild(div);
         });
+        
         if(selectedUrls.size === 0) { selectAllCheckbox.checked = false; updateDownloadButton(); }
     }
 
