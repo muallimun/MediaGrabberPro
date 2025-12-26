@@ -12,14 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsToggle = document.getElementById('settingsToggle');
     const settingsPanel = document.getElementById('settingsPanel');
     const saveSettingsBtn = document.getElementById('saveSettings');
-    const closePopupBtn = document.getElementById('closePopup'); // YENİ
+    const closePopupBtn = document.getElementById('closePopup');
     
     const footerControls = document.getElementById('footerControls');
     const searchBox = document.getElementById('searchBox');
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
 
-    // Video Modal
     const videoModal = document.getElementById('videoModal');
     const videoPlayer = document.getElementById('videoPlayer');
     const closeVideoBtn = document.getElementById('closeVideoBtn');
@@ -48,12 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { toast.className = ""; }, 2500);
     }
 
-    // KAPATMA BUTONU
     if (closePopupBtn) {
         closePopupBtn.onclick = () => window.close();
     }
 
-    // Video Kapat
     if(closeVideoBtn) {
         closeVideoBtn.onclick = () => {
             videoModal.style.display = 'none';
@@ -62,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // PANELLER
     infoToggle.onclick = () => {
         infoPanel.style.display = infoPanel.style.display === 'block' ? 'none' : 'block';
         settingsPanel.style.display = 'none';
@@ -84,16 +80,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // SEÇİM
     function updateDownloadButton() {
         const count = selectedUrls.size;
         if (count > 0) {
             downloadAllBtn.textContent = `SEÇİLENLERİ İNDİR (${count})`;
-            downloadAllBtn.style.background = "#f39c12";
-            clearBtn.textContent = "SEÇİLENİ SİL";
+            downloadAllBtn.style.background = "#f59e0b"; // warning color
+            clearBtn.textContent = `SEÇİLENİ SİL (${count})`;
         } else {
             downloadAllBtn.textContent = "⬇ TÜMÜNÜ İNDİR";
-            downloadAllBtn.style.background = "#27ae60";
+            downloadAllBtn.style.background = "#10b981"; // success color
             clearBtn.textContent = "🗑 TÜMÜNÜ SİL";
         }
     }
@@ -101,18 +96,25 @@ document.addEventListener('DOMContentLoaded', () => {
     selectAllCheckbox.onclick = () => {
         const checkboxes = document.querySelectorAll('.item-checkbox');
         const isChecked = selectAllCheckbox.checked;
-        selectedUrls.clear();
+        
         checkboxes.forEach(cb => {
+            const url = cb.dataset.url;
+            const itemDiv = cb.closest('.item');
+            
             cb.checked = isChecked;
-            if(isChecked) selectedUrls.add(cb.dataset.url);
+
+            if (isChecked) {
+                selectedUrls.add(url);
+                itemDiv.classList.add('selected');
+            } else {
+                selectedUrls.delete(url);
+                itemDiv.classList.remove('selected');
+            }
         });
-        document.querySelectorAll('.item').forEach(item => {
-            isChecked ? item.classList.add('selected') : item.classList.remove('selected');
-        });
+
         updateDownloadButton();
     };
 
-    // KAYDET
     saveListBtn.onclick = () => {
         if (allItems.length === 0) return;
         chrome.storage.local.get({ listName: "Media_List.txt" }, (settings) => {
@@ -120,33 +122,21 @@ document.addEventListener('DOMContentLoaded', () => {
             allItems.forEach(item => { content += `Dosya: ${item.filename}\nLink: ${item.url}\n\n`; });
             const blob = new Blob([content], {type: 'text/plain'});
             chrome.downloads.download({ url: URL.createObjectURL(blob), filename: settings.listName, saveAs: true });
-            showToast("Liste İndiriliyor");
         });
     };
 
-    searchBox.addEventListener('keyup', (e) => {
+    searchBox.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = allItems.filter(item => item.filename.toLowerCase().includes(term));
         renderListUI(filtered);
     });
 
-    // OYNATICI (Video ve Müzik)
-    function toggleAudio(url, btn, type) {
-        // Video ise Modal Aç
-        if (type === 'video') {
-            if(currentAudio) currentAudio.pause();
-            videoPlayer.src = url;
-            videoModal.style.display = "flex";
-            videoPlayer.play();
-            return;
-        }
-
+    function toggleAudio(url, btn) {
         if (currentAudio) {
             currentAudio.pause();
             if (currentPlayBtn) {
                 currentPlayBtn.innerHTML = icons.play;
                 currentPlayBtn.classList.remove('active');
-                currentPlayBtn.closest('.item').classList.remove('playing');
             }
             if (currentPlayBtn === btn) {
                 currentAudio = null; currentPlayBtn = null; return;
@@ -156,9 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlayBtn = btn;
         btn.innerHTML = icons.pause;
         btn.classList.add('active');
-        btn.closest('.item').classList.add('playing');
         currentAudio.play().catch(() => { showToast("Oynatılamıyor", true); btn.innerHTML = icons.play; btn.classList.remove('active'); });
-        currentAudio.onended = () => { btn.innerHTML = icons.play; btn.classList.remove('active'); btn.closest('.item').classList.remove('playing'); currentAudio = null; };
+        currentAudio.onended = () => { btn.innerHTML = icons.play; btn.classList.remove('active'); currentAudio = null; };
     }
 
     function fetchAndRender() {
@@ -166,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             allItems = result.mediaList || [];
             countBadge.textContent = allItems.length;
             renderListUI(allItems);
+            updateDownloadButton();
         });
     }
 
@@ -175,18 +165,19 @@ document.addEventListener('DOMContentLoaded', () => {
             listDiv.innerHTML = `<div class="empty-state"><div style="font-size:30px; margin-bottom:10px; opacity:0.4;">📭</div><div>Liste Boş</div><div style="margin-top:5px; font-size:11px;">Medyayı oynatın.</div></div>`;
             footerControls.style.display = 'none';
             saveListBtn.style.display = 'none';
+            searchBox.parentElement.style.display = 'none';
             return;
         }
         footerControls.style.display = 'flex';
         saveListBtn.style.display = 'flex';
+        searchBox.parentElement.style.display = 'block';
 
         [...items].reverse().forEach(item => {
             const div = document.createElement('div');
             div.className = 'item';
             if (selectedUrls.has(item.url)) div.classList.add('selected');
 
-            // TİP BELİRLEME (VİDEO MU?)
-            const isVideo = item.type === 'video' || item.filename.endsWith('.mp4');
+            const isVideo = item.type === 'video' || (item.filename && item.filename.endsWith('.mp4'));
             const fileIcon = isVideo ? icons.videoIcon : icons.musicNote;
 
             div.innerHTML = `
@@ -217,11 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.onchange = (e) => {
                 if(e.target.checked) { selectedUrls.add(item.url); div.classList.add('selected'); } 
                 else { selectedUrls.delete(item.url); div.classList.remove('selected'); }
-                selectAllCheckbox.checked = (selectedUrls.size === items.length);
+                selectAllCheckbox.checked = (selectedUrls.size === allItems.length && allItems.length > 0);
                 updateDownloadButton();
             };
             
-            // OYNATMA BUTONU
             div.querySelector('.play-btn').onclick = function() { 
                 if(isVideo) {
                     if(currentAudio) currentAudio.pause();
@@ -229,14 +219,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     videoModal.style.display = "flex";
                     videoPlayer.play();
                 } else {
-                    toggleAudio(item.url, this, 'audio'); 
+                    toggleAudio(item.url, this); 
                 }
             };
 
             div.querySelector('.copy-btn').onclick = function() { navigator.clipboard.writeText(item.url); showToast("Link Kopyalandı"); };
             div.querySelector('.edit-btn').onclick = function() {
-                const newName = prompt("Yeni dosya adı:", item.filename.replace(/\.(mp3|mp4)$/i, ''));
-                if (newName) {
+                const currentName = item.filename.replace(/\.(mp3|mp4|m4a|wav|aac|m3u8)$/i, '');
+                const newName = prompt("Yeni dosya adı:", currentName);
+                if (newName && newName.trim() !== "") {
                     chrome.runtime.sendMessage({action: "RENAME_ITEM", url: item.url, newName: newName}, (res) => {
                         if(res.status === "Renamed") { showToast("İsim Güncellendi"); fetchAndRender(); }
                     });
@@ -247,50 +238,79 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.runtime.sendMessage({action: "DOWNLOAD_ONE", url: item.url, filename: item.filename}, (res) => {
                     if(res && res.success) { btn.innerHTML = "✔"; btn.style.color = "#10b981"; } 
                     else { btn.innerHTML = "↗"; chrome.tabs.create({ url: item.url }); showToast("Yeni sekmede açıldı.", true); }
-                    setTimeout(() => { btn.innerHTML = icons.dl; btn.style = ""; }, 2000);
+                    setTimeout(() => { btn.innerHTML = icons.dl; btn.style.color = ""; }, 2000);
                 });
             };
             div.querySelector('.del-btn').onclick = function() {
-                if(confirm("Silinsin mi?")) {
-                    chrome.runtime.sendMessage({action: "DELETE_ITEM", url: item.url}, () => {
-                        selectedUrls.delete(item.url); updateDownloadButton(); fetchAndRender();
-                    });
-                }
+                chrome.runtime.sendMessage({action: "DELETE_ITEM", url: item.url}, () => {
+                    selectedUrls.delete(item.url); updateDownloadButton(); fetchAndRender();
+                });
             };
-
             listDiv.appendChild(div);
         });
-        
-        if(selectedUrls.size === 0) { selectAllCheckbox.checked = false; updateDownloadButton(); }
+        selectAllCheckbox.checked = (selectedUrls.size > 0) && document.querySelectorAll('.item-checkbox').length === selectedUrls.size;
+
     }
 
     downloadAllBtn.onclick = () => {
         if (selectedUrls.size > 0) {
             const urlsArray = Array.from(selectedUrls);
-            chrome.runtime.sendMessage({action: "DOWNLOAD_LIST", urls: urlsArray});
-            showToast(`${urlsArray.length} Dosya İndiriliyor...`);
+            chrome.runtime.sendMessage({action: "DOWNLOAD_LIST", urls: urlsArray}, (response) => {
+                if (response?.status === 'BATCH_STARTED') {
+                    showToast(`${urlsArray.length} dosya indirme kuyruğuna eklendi.`);
+                }
+            });
         } else {
-            if(confirm("Tüm liste indirilecek. Onaylıyor musunuz?")) {
-                chrome.runtime.sendMessage({action: "DOWNLOAD_ALL"});
-                showToast("Toplu İndirme Başlatıldı");
+            if(confirm(`Listedeki ${allItems.length} dosyanın tümü indirilsin mi?`)) {
+                chrome.runtime.sendMessage({action: "DOWNLOAD_ALL"}, (response) => {
+                    if (response === 'BATCH_STARTED') {
+                        showToast("Tüm dosyalar indirme kuyruğuna eklendi.");
+                    }
+                });
             }
         }
     };
+
     downloadZipBtn.onclick = () => {
-        if(confirm("Dosyalar ZIP olarak indirilecek. Bekleyin.")) {
-            chrome.runtime.sendMessage({action: "DOWNLOAD_ZIP"});
-            showToast("Sıkıştırma Başladı...");
+        const itemsToZip = selectedUrls.size > 0 
+            ? allItems.filter(item => selectedUrls.has(item.url))
+            : allItems;
+
+        if (itemsToZip.length === 0) {
+            showToast("Sıkıştırılacak dosya bulunamadı.", true);
+            return;
+        }
+
+        if(confirm(`${itemsToZip.length} dosya ZIP olarak indirilecek. Lütfen bekleyin.`)) {
+            chrome.runtime.sendMessage({action: "DOWNLOAD_ZIP"}, (response) => {
+                if (response === 'ZIP_STARTED') {
+                    showToast("Sıkıştırma ve indirme başlatıldı...");
+                }
+            });
         }
     };
+
     clearBtn.onclick = () => {
         if (selectedUrls.size > 0) {
-             if(confirm(`Seçili ${selectedUrls.size} dosya silinecek?`)) {
-                 selectedUrls.forEach(url => chrome.runtime.sendMessage({action: "DELETE_ITEM", url: url}));
-                 setTimeout(() => { selectedUrls.clear(); updateDownloadButton(); fetchAndRender(); }, 500);
+             if(confirm(`Seçili ${selectedUrls.size} dosya silinsin mi?`)) {
+                 const urlsToDelete = Array.from(selectedUrls);
+                 chrome.runtime.sendMessage({action: "DELETE_LIST", urls: urlsToDelete}, (response) => {
+                    if (response?.status === 'Deleted multiple') {
+                        selectedUrls.clear(); 
+                        fetchAndRender();
+                        showToast(`${urlsToDelete.length} öğe silindi.`);
+                    }
+                 });
              }
         } else {
-            if(confirm("Tüm liste temizlenecek?")) {
-                chrome.runtime.sendMessage({action: "CLEAR"}, () => { selectedUrls.clear(); updateDownloadButton(); fetchAndRender(); });
+            if(confirm("Tüm liste temizlensin mi?")) {
+                chrome.runtime.sendMessage({action: "CLEAR"}, (response) => {
+                    if (response === 'CLEARED') {
+                        selectedUrls.clear(); 
+                        fetchAndRender(); 
+                        showToast("Liste temizlendi.");
+                    }
+                });
             }
         }
     };
