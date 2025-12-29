@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <title>Media Grabber Pro</title>
     <style>
-        /* CSS AYNEN KALDI + VİDEO MODAL EKLENDİ */
+        /* TÜM ORİJİNAL TASARIM VE DEĞİŞKENLER KORUNDU */
         :root {
             --primary: #2563eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --text-main: #334155; --text-sub: #64748b;
         }
+
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            width: 600px; margin: 0; padding: 0; background-color: #ffffff; color: var(--text-main);
+            width: 650px; /* Genişlik 650px yapıldı */
+            margin: 0; padding: 0; background-color: #ffffff; color: var(--text-main);
             font-size: 14px; -webkit-font-smoothing: antialiased; 
         }
 
@@ -32,21 +34,60 @@
         }
         .icon-btn-header:hover { background: rgba(255,255,255,0.25); }
 
-        /* KAPAT BUTONU */
+        /* Kapat Butonu Özel Stili */
         #closeBtn:hover { background: rgba(239, 68, 68, 0.8); border-color: #ef4444; }
 
-        /* Paneller */
-        #settingsPanel, #infoPanel {
-            display: none; background: #fff; padding: 15px 20px; border-bottom: 1px solid var(--border);
-            font-size: 12px; line-height: 1.5; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); position: absolute; top: 60px; left: 0; right: 0; z-index: 50;
-        }
-        #infoPanel { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+   /* GÜNCELLENMİŞ (TEMİZ HALİ) */
+#settingsPanel {
+    display: none; background: #fff; padding: 15px 20px; border-bottom: 1px solid var(--border);
+    font-size: 12px; line-height: 1.5; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+    position: absolute; top: 60px; left: 0; right: 0; z-index: 50;
+}
+        #infoPanel { 
+    display: none; 
+    background: #fffbeb; 
+    color: #92400e; 
+    border-bottom: 1px solid #fcd34d;
+    font-size: 12px; 
+    line-height: 1.5; 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+    position: absolute; 
+    top: 60px; 
+    left: 0; 
+    right: 0; 
+    z-index: 999; /* Panelin her zaman en üstte kalması için */
+    height: 475px; /* Popup boyutuyla uyumlu sabit yükseklik */
+    overflow-y: auto; /* Kaydırma çubuğunun aktif olması için */
+    padding: 10px 20px; 
+    box-sizing: border-box; /* Padding taşmasını engeller */
+}
 
-        /* Liste */
-        #list { height: 350px; overflow-y: auto; padding: 0; }
+        /* Sekmeler ve Sıralama Satırı */
+        .controls-row { 
+            display: flex; background: #f1f5f9; padding: 4px; gap: 4px; 
+            border-bottom: 1px solid var(--border); align-items: center; 
+        }
+        .tabs-container { display: flex; flex: 1; gap: 4px; }
+        .tab-btn { 
+            flex: 1; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; 
+            font-size: 11px; font-weight: 600; color: var(--text-sub); background: transparent; 
+            transition: all 0.2s; text-transform: uppercase; 
+        }
+        .tab-btn:hover { background: rgba(0,0,0,0.05); color: var(--text-main); }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        /* Sıralama Menüsü Stili */
+        #sortSelect { 
+            padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); 
+            font-size: 11px; background: white; color: var(--text-main); 
+            cursor: pointer; outline: none; margin-right: 4px;
+        }
+
+        /* Liste ve Ögeler */
+        #list { height: 320px; overflow-y: auto; padding: 0; }
         .item { 
             display: flex; align-items: center; padding: 8px 20px; 
-            border-bottom: 1px solid var(--border); background: white; height: 44px;
+            border-bottom: 1px solid var(--border); background: white; height: 48px;
             transition: background 0.1s;
         }
         .item:hover { background-color: #f8fafc; }
@@ -59,8 +100,13 @@
         .file-icon { color: var(--text-sub); font-size: 16px; width: 32px; height: 32px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .file-details { overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
         .name { font-weight: 500; font-size: 13px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;}
-        .meta { font-size: 11px; color: var(--text-sub); display: flex; gap: 10px; }
-        .tag { background: #e2e8f0; padding: 1px 5px; border-radius: 3px; font-weight: 600; font-size: 9px; text-transform: uppercase; }
+        
+        /* Renkli Etiketler ve Meta Bilgisi */
+        .meta { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
+        .tag { background: #e2e8f0; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; text-transform: uppercase; }
+        .tag.video-tag { background: #dbeafe; color: #1e40af; }
+        .tag.audio-tag { background: #fef3c7; color: #92400e; }
+        .size-info { font-weight: 600; color: var(--text-main); background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
 
         .action-col { display: flex; gap: 4px; align-items: center; }
         .icon-btn { width: 28px; height: 28px; border: 1px solid transparent; border-radius: 4px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
@@ -73,7 +119,11 @@
         .dl-btn:hover { color: var(--success); background: #f0fdf4; }
         .del-btn:hover { color: var(--danger); background: #fef2f2; }
 
-        /* Footer */
+        /* İndirme Animasyonu */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
+
+        /* Footer ve Diğerleri */
         .footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; gap: 10px; }
         .main-btn { flex: 1; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; text-transform: uppercase; white-space: nowrap; }
         
@@ -103,7 +153,7 @@
             border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
         
-        /* GEREKLİ EKSİK CSSLERİ EKLEDİM */
+        /* Detaylı Bilgi ve Ayarlar CSS */
         .setting-item { margin-bottom: 12px; }
         .setting-label { display: block; font-weight: 600; margin-bottom: 4px; color: var(--text-main); }
         .setting-input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box;}
@@ -111,7 +161,11 @@
         .search-box-container { padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); }
         #searchBox { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: inherit; }
         .setting-note { font-size: 11px; color: var(--text-sub); margin-top: 3px; display: block; font-style: italic;}
-        .info-content { padding: 20px; }
+        
+        /* Yardım Paneli İçerik Stilleri */
+        .info-content { 
+    padding: 5px 0 20px 0; /* Alttan ekstra boşluk bırakıldı */
+}
         .info-section-title { font-weight: 700; color: var(--primary); margin: 15px 0 10px 0; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .info-section-title:first-child { margin-top: 0; }
         .step { display: flex; gap: 10px; margin-bottom: 8px; background: #f8fafc; padding: 8px; border-radius: 6px; border-left: 3px solid var(--primary); }
@@ -132,7 +186,7 @@
     <div class="header">
         <div class="header-left">
             <input type="checkbox" id="selectAll" title="Tümünü Seç / Kaldır">
-            <div style="font-weight: 600;">Grabber <span id="countBadge" class="badge">0</span></div>
+            <div style="font-weight: 600; display: inline-block; margin-left: 10px;">Grabber <span id="countBadge" class="badge">0</span></div>
         </div>
         <div class="header-actions">
             <button id="saveList" class="icon-btn-header" title="Listeyi Metin Olarak Kaydet">
@@ -157,6 +211,13 @@
         <div class="setting-item">
             <label class="setting-label">Liste Kayıt Dosya Adı:</label>
             <input type="text" id="listNameInput" class="setting-input" placeholder="Media_List.txt">
+        </div>
+        <div class="setting-item">
+            <label class="setting-label">Otomatik Temizleme:</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="autoClearCheck" style="width: 14px; height: 14px; cursor: pointer;">
+                <span style="font-size: 11px; color: var(--text-main);">Tarayıcı açıldığında listeyi temizle</span>
+            </div>
         </div>
         <button id="saveSettings" class="save-settings-btn">AYARLARI KAYDET</button>
     </div>
@@ -191,6 +252,22 @@
 
     <div class="search-box-container">
         <input type="text" id="searchBox" placeholder="Dosya adı ara...">
+    </div>
+
+    <div class="controls-row">
+        <div class="tabs-container" id="tabsContainer">
+            <button class="tab-btn active" data-filter="all">Hepsi</button>
+            <button class="tab-btn" data-filter="audio">🎵 Sesler</button>
+            <button class="tab-btn" data-filter="video">🎬 Videolar</button>
+        </div>
+        <div class="sort-container">
+            <select id="sortSelect" title="Sıralama Seçenekleri">
+                <option value="newest">Tarih (En Yeni)</option>
+                <option value="oldest">Tarih (En Eski)</option>
+                <option value="name_asc">İsim (A-Z)</option>
+                <option value="size_desc">Boyut (Büyükten Küçüğe)</option>
+            </select>
+        </div>
     </div>
 
     <div id="list"><div class="empty-state">Yükleniyor...</div></div>

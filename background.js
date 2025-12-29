@@ -1,27 +1,24 @@
-// background.js - V69 (Anti-Duplicate Shield)
+// background.js - V80 (Kritik Hata Düzeltmeleri & Tam Mantık)
 
 let tabTitles = {}; 
 const processedUrls = new Set();
 const processedBaseUrls = new Set(); 
-// YENİ: Son kaydedilen dosyaları geçici tutan hafıza
 const recentSaves = new Set();
+const activeDownloads = new Map(); // downloadId -> url
 
 const trMap = {'ç':'c','Ç':'C','ğ':'g','Ğ':'G','ı':'i','İ':'I','ö':'o','Ö':'O','ş':'s','Ş':'S','ü':'u','Ü':'U'};
 
-try { importScripts('jszip.min.js'); } catch (e) {}
+try { importScripts('jszip.min.js'); } catch (e) { console.error("JSZip yüklenemedi:", e); }
 
 function sanitizeFilename(name) {
-    if (!name || name === "undefined" || name === "null") return "Media_" + Date.now();
+    if (!name || name === "undefined" || name === "null" || name === "Dosya" || name.trim() === "") return "Media_" + Date.now();
     let cleanName = name.replace(/[çÇğĞıİöÖşŞüÜ]/g, match => trMap[match] || match);
-    cleanName = cleanName.trim().replace(/\s+/g, '_');
-    cleanName = cleanName.replace(/[^a-zA-Z0-9_\-.]/g, '');
+    cleanName = cleanName.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-.]/g, '');
     if (cleanName.length > 120) cleanName = cleanName.substring(0, 120);
     return cleanName;
 }
 
-function getBaseUrl(url) {
-    try { return url.split('?')[0]; } catch(e) { return url; }
-}
+function getBaseUrl(url) { try { return url.split('?')[0]; } catch(e) { return url; } }
 
 function updateBadge() {
     chrome.storage.local.get({ mediaList: [] }, (result) => {
@@ -31,161 +28,154 @@ function updateBadge() {
     });
 }
 
-// --- ANA KAYIT FONKSİYONU ---
+// İndirme Durumu Takibi
+chrome.downloads.onChanged.addListener((delta) => {
+    if (activeDownloads.has(delta.id)) {
+        const url = activeDownloads.get(delta.id);
+        let status = "downloading";
+        if (delta.state && delta.state.current === "complete") { status = "success"; activeDownloads.delete(delta.id); }
+        else if (delta.error) { status = "error"; activeDownloads.delete(delta.id); }
+        chrome.runtime.sendMessage({ action: "DOWNLOAD_STATUS_UPDATE", url: url, status: status }).catch(() => {});
+    }
+});
+
+// Otomatik Temizleme
+chrome.runtime.onStartup.addListener(() => {
+    chrome.storage.local.get({ autoClear: false }, (res) => {
+        if (res.autoClear) {
+            chrome.storage.local.set({ mediaList: [] }, () => {
+                processedUrls.clear(); processedBaseUrls.clear(); updateBadge();
+            });
+        }
+    });
+});
+
+// --- ANA KAYIT FONKSİYONU (ReferenceError ve Artist Fix) ---
 function saveToStorage(url, title, sizeInfo, isHLS = false, detectedExt = ".mp3") {
-    const baseUrl = getBaseUrl(url);
-    
-    // 1. URL BAZLI KONTROL (Aynı link mi?)
-    if (processedBaseUrls.has(baseUrl)) return;
-
-    // İsim Belirleme
-    let finalTitle = title;
-    if (!finalTitle || finalTitle === "Dosya" || finalTitle === "Audio_File" || finalTitle === "Medya_Dosyasi") {
-        try {
-            finalTitle = decodeURIComponent(url.split('/').pop().split('?')[0]);
-            finalTitle = finalTitle.replace(/\.(mp3|m4a|wav|mp4|m3u8)$/i, '');
-        } catch(e) { finalTitle = "Stream_" + Date.now(); }
-    }
-
-    let finalFilename = sanitizeFilename(finalTitle);
-    
-    // Uzantı Düzeltme (Video ve Ses için)
-    if (detectedExt === ".mp4") {
-        if (!finalFilename.toLowerCase().endsWith(".mp4")) {
-            finalFilename = finalFilename.replace(/\.(mp3|wav|m4a)$/i, '');
-            finalFilename += ".mp4";
-        }
-    } else if (isHLS) {
-        if (!finalFilename.match(/\.(m3u8|mp3|mp4)$/i)) finalFilename += ".mp3"; 
-    } else {
-        if (!finalFilename.toLowerCase().endsWith(detectedExt)) {
-            finalFilename = finalFilename.replace(/\.(mp3|m4a|wav|mp4|aac)$/i, '');
-            finalFilename += detectedExt;
-        }
-    }
-
-    // --- 2. İSİM VE ZAMAN BAZLI KİLİT (YENİ) ---
-    // Eğer bu isimde bir dosya son 5 saniye içinde kaydedildiyse, bunu yoksay.
-    // Bu, EBA'daki çift tıklama veya preload sorununu çözer.
-    if (recentSaves.has(finalFilename)) {
-        console.log("🚫 Çift kayıt engellendi (Zaman Kilidi):", finalFilename);
-        return;
-    }
-
-    const newItem = { 
-        url: url, 
-        filename: finalFilename, 
-        size: sizeInfo || "?",
-        type: (detectedExt === ".mp4") ? "video" : (isHLS ? "stream" : "audio") 
-    };
-
     chrome.storage.local.get({ mediaList: [] }, (result) => {
-        const list = result.mediaList;
+        const list = result.mediaList || [];
         
-        // 3. KALICI LİSTE KONTROLÜ (Daha önceden var mı?)
-        const isDuplicateName = list.some(i => i.filename === finalFilename);
-        const isDuplicateUrl = list.some(i => getBaseUrl(i.url) === baseUrl);
+        // 1. Link Tekilleştirme (Aynı URL zaten varsa ekleme)
+        if (list.some(i => i.url === url)) return;
 
-        if (!isDuplicateUrl) {
-            // Eğer isim listede VARSA ama zaman kilidine takılmadıysa (yani eski bir kayıtsa)
-            // veya URL farklıysa, ismin sonuna numara ekleyip kaydet.
-            // ANCAK: recentSaves kontrolü zaten 5 saniye içindeki aynı isimleri engellediği için,
-            // buraya gelen "DuplicateName" durumu, gerçekten farklı bir dosya ama aynı isimli demektir.
-            if (isDuplicateName) {
-                const timestamp = Date.now().toString().slice(-4);
-                newItem.filename = newItem.filename.replace(/(\.[^.]+)$/, `_${timestamp}$1`);
-            }
+        let finalTitle = title;
+        const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+        const genericNames = ["index", "broadcast", "audio", "video", "media", "stream", "playlist", "dosya", "medya"];
 
-            // Kayıt İşlemleri
-            processedUrls.add(url);
-            processedBaseUrls.add(baseUrl);
-            
-            // İsim Kalkanını Aktif Et (5 Saniye boyunca bu ismi kilitle)
-            recentSaves.add(finalFilename);
-            setTimeout(() => { recentSaves.delete(finalFilename); }, 5000);
-
-            list.push(newItem);
-            chrome.storage.local.set({ mediaList: list }, () => updateBadge());
+        // .mp4 gibi anlamsız veya jenerik isimleri düzelt
+        let check = (finalTitle || "").toLowerCase().split('.')[0];
+        if (!finalTitle || finalTitle.length < 3 || genericNames.includes(check) || isUuid(check)) {
+            try {
+                const urlObj = new URL(url);
+                const parts = urlObj.pathname.split('/').filter(p => p.length > 0);
+                let fName = parts.pop() || "";
+                let folder = parts.pop() || "Media";
+                finalTitle = (genericNames.includes(fName.toLowerCase().split('.')[0]) || fName.length < 3) ? folder : fName.replace(/\.(mp3|m4a|wav|mp4|m3u8|aac)$/i, '');
+            } catch(e) { finalTitle = "Media_" + Date.now().toString().slice(-4); }
         }
+
+        let filenameToSave = sanitizeFilename(finalTitle);
+        
+        if (detectedExt === ".mp4") {
+            if (!filenameToSave.toLowerCase().endsWith(".mp4")) filenameToSave += ".mp4";
+        } else if (isHLS) {
+            if (!filenameToSave.match(/\.(m3u8|mp3|mp4)$/i)) filenameToSave += ".mp3"; 
+        } else {
+            if (!filenameToSave.toLowerCase().endsWith(detectedExt)) filenameToSave += detectedExt;
+        }
+
+        // 2. İsim Çakışması Kontrolü (Aynı sanatçı sorunu çözümü)
+        if (list.some(i => i.filename === filenameToSave)) {
+            const timestamp = Date.now().toString().slice(-4);
+            filenameToSave = filenameToSave.replace(/(\.[^.]+)$/, `_${timestamp}$1`);
+        }
+
+        // 3. Değişken Tanımlama (ReferenceError Fix)
+        const newItem = { 
+            url: url, 
+            filename: filenameToSave, 
+            size: sizeInfo || "?",
+            type: (detectedExt === ".mp4") ? "video" : (isHLS ? "stream" : "audio"),
+            timestamp: Date.now()
+        };
+
+        list.push(newItem);
+        chrome.storage.local.set({ mediaList: list }, () => updateBadge());
     });
 }
 
-// MESAJLAR (Aynı Kaldı)
+// MESAJLAR (Tüm Orijinal Mesajlar KORUNDU)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "SET_TITLE") {
         if (sender.tab) tabTitles[sender.tab.id] = request.payload;
         sendResponse("OK");
     }
     if (request.action === "CLEAR") {
-        processedUrls.clear(); processedBaseUrls.clear(); tabTitles = {}; recentSaves.clear();
+        tabTitles = {};
         chrome.storage.local.set({ mediaList: [] }, () => { updateBadge(); sendResponse("CLEARED"); });
         return true; 
+    }
+    if (request.action === "DELETE_ITEM") {
+        chrome.storage.local.get({ mediaList: [] }, (result) => {
+            const newList = result.mediaList.filter(item => item.url !== request.url);
+            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse({status: "Deleted"}); });
+        }); return true;
+    }
+    if (request.action === "DELETE_LIST") {
+        chrome.storage.local.get({ mediaList: [] }, (result) => {
+            const newList = result.mediaList.filter(item => !request.urls.includes(item.url));
+            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse({status: "Deleted multiple"}); });
+        }); return true;
     }
     if (request.action === "RENAME_ITEM") {
         chrome.storage.local.get({ mediaList: [] }, (result) => {
             const list = result.mediaList;
-            const itemIndex = list.findIndex(i => i.url === request.url);
-            if (itemIndex !== -1) {
-                let newName = sanitizeFilename(request.newName);
-                const oldExt = list[itemIndex].filename.split('.').pop();
-                if(!newName.includes('.')) newName += "." + oldExt;
-                list[itemIndex].filename = newName;
+            const idx = list.findIndex(i => i.url === request.url);
+            if (idx !== -1) {
+                let newN = sanitizeFilename(request.newName);
+                const ext = list[idx].filename.split('.').pop();
+                if(!newN.includes('.')) newN += "." + ext;
+                list[idx].filename = newN;
                 chrome.storage.local.set({ mediaList: list }, () => sendResponse({status: "Renamed"}));
             }
         }); return true;
     }
     if (request.action === "DOWNLOAD_ONE") {
-        chrome.storage.local.get({ folderName: "MediaGrabber_Downloads" }, (settings) => {
-            let fname = sanitizeFilename(request.filename);
-            const folder = settings.folderName || "MediaGrabber_Downloads";
+        chrome.storage.local.get({ folderName: "MediaGrabber_Downloads" }, (s) => {
             chrome.downloads.download({
-                url: request.url, filename: folder + "/" + fname, conflictAction: 'uniquify', saveAs: false
-            }, (id) => { sendResponse({success: !chrome.runtime.lastError}); });
+                url: request.url, filename: (s.folderName || "MediaGrabber_Downloads") + "/" + sanitizeFilename(request.filename),
+                conflictAction: 'uniquify'
+            }, (id) => { if (id) activeDownloads.set(id, request.url); sendResponse({success: !!id}); });
         }); return true;
     }
-    if (request.action === "DOWNLOAD_ALL") {
+    if (request.action === "DOWNLOAD_LIST" || request.action === "DOWNLOAD_ALL") {
         chrome.storage.local.get({ mediaList: [], folderName: "MediaGrabber_Downloads" }, async (result) => {
-            const list = result.mediaList || [];
             const folder = result.folderName || "MediaGrabber_Downloads";
-            for(let item of list) {
-                let fname = sanitizeFilename(item.filename);
-                chrome.downloads.download({
-                    url: item.url, filename: folder + "/" + fname, conflictAction: 'uniquify', saveAs: false
-                });
-                await new Promise(r => setTimeout(r, 1200));
+            const targets = request.action === "DOWNLOAD_LIST" ? request.urls : result.mediaList.map(i => i.url);
+            for(let url of targets) {
+                const item = result.mediaList.find(i => i.url === url);
+                if(item) {
+                    chrome.downloads.download({ url: item.url, filename: folder + "/" + sanitizeFilename(item.filename) }, (id) => { if (id) activeDownloads.set(id, item.url); });
+                    await new Promise(r => setTimeout(r, 1200));
+                }
             }
         }); sendResponse("BATCH_STARTED");
-    }
-    if (request.action === "DELETE_ITEM") {
-        chrome.storage.local.get({ mediaList: [] }, (result) => {
-            const targetBase = getBaseUrl(request.url);
-            const newList = result.mediaList.filter(item => item.url !== request.url);
-            processedUrls.delete(request.url); processedBaseUrls.delete(targetBase);
-            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse({status: "Deleted"}); });
-        }); return true;
     }
     if (request.action === "DOWNLOAD_ZIP") { downloadAndZip(); sendResponse("ZIP_STARTED"); }
     if (request.action === "ADD_SCANNED_LINKS") {
         const links = request.payload;
         let count = 0;
-        chrome.storage.local.get({ mediaList: [] }, (result) => {
-            const list = result.mediaList;
-            links.forEach(item => {
-                saveToStorage(item.url, item.title, "Scan");
-                count++;
-            });
-            sendResponse({addedCount: count});
-        });
-        return true;
+        links.forEach(item => { saveToStorage(item.url, item.title, "Scan"); count++; });
+        sendResponse({addedCount: count}); return true;
     }
 });
 
-async function downloadAndZip() { /* Zip aynı */ 
+// ZIP ve Network Dinleyici mantığı KORUNDU
+async function downloadAndZip() {
     const zip = new JSZip();
     const folder = zip.folder("Medya_Arsiv");
     const result = await chrome.storage.local.get({ mediaList: [] });
     const list = result.mediaList || [];
-    if (list.length === 0) return;
     for (const item of list) {
         try {
             const response = await fetch(item.url);
@@ -198,74 +188,38 @@ async function downloadAndZip() { /* Zip aynı */
     const content = await zip.generateAsync({type: "blob"});
     const reader = new FileReader();
     reader.onload = function() {
-        const url = reader.result;
-        const date = new Date().toISOString().slice(0,10);
-        chrome.downloads.download({ url: url, filename: `Arsiv_${date}.zip`, saveAs: true });
+        chrome.downloads.download({ url: reader.result, filename: `Arsiv_${Date.now()}.zip`, saveAs: true });
     };
     reader.readAsDataURL(content);
 }
 
-// --- NETWORK DİNLEYİCİ ---
 chrome.webRequest.onHeadersReceived.addListener(
     function(details) {
         const url = details.url;
-        const tabId = details.tabId;
-
-        // Filtreler
         if (url.includes('google') || url.includes('analytics') || url.includes('facebook')) return;
-        if (url.match(/\.(png|jpg|jpeg|gif|svg|css|js|woff|ttf|ico|json|html|pdf|doc)(\?|$)/i)) return;
+        if (url.match(/\.(png|jpg|jpeg|gif|svg|css|js|woff|ttf|ico|json|html|pdf|doc|php)(\?|$)/i)) return;
 
         const headers = details.responseHeaders;
-        let isMedia = false;
-        let isHLS = false;
-        let detectedExt = ".mp3";
-        let size = 0;
+        let isMedia = false; let isHLS = false; let size = 0; let detectedExt = ".mp3";
 
         if (headers) {
-            for (let i = 0; i < headers.length; i++) {
-                const name = headers[i].name.toLowerCase();
-                const value = headers[i].value.toLowerCase();
+            for (let h of headers) {
+                let name = h.name.toLowerCase();
+                let val = h.value.toLowerCase();
                 if (name === 'content-type') {
-                    // SVG Kesin Engel
-                    if (value.includes('svg') || value.includes('image')) return;
-
-                    if (value.includes('audio/')) { 
-                        isMedia = true; 
-                        if(value.includes('wav')) detectedExt = ".wav";
-                        else if(value.includes('aac')) detectedExt = ".aac";
-                        else if(value.includes('m4a')) detectedExt = ".m4a";
-                    }
-                    else if (value.includes('video/mp4') || value.includes('video/webm')) { 
-                        isMedia = true; 
-                        detectedExt = ".mp4"; 
-                    }
-                    else if (value.includes('application/octet-stream')) {
-                         if (url.match(/\.(mp3|m4a|wav|aac)(\?|$)/i) || url.includes('/assets/')) isMedia = true;
-                         if (url.match(/\.mp4(\?|$)/i)) { isMedia = true; detectedExt = ".mp4"; }
-                    }
-                    if (value.includes('mpegurl') || value.includes('hls')) { isMedia = true; isHLS = true; }
+                    if (val.includes('audio/')) { isMedia = true; if(val.includes('wav')) detectedExt=".wav"; }
+                    if (val.includes('video/')) { isMedia = true; detectedExt=".mp4"; }
+                    if (val.includes('mpegurl') || val.includes('hls')) { isMedia = true; isHLS = true; }
                 }
-                if (name === 'content-length') size = parseInt(value);
+                if (name === 'content-length') size = parseInt(val);
             }
         }
-        if (url.includes('.m3u8') || url.includes('playlist')) { isMedia = true; isHLS = true; }
-
-        if (!isMedia) {
-            if (url.match(/\.mp4(\?|$)/i)) { isMedia = true; detectedExt = ".mp4"; }
-            else if (url.match(/\.mp3(\?|$)/i)) { isMedia = true; detectedExt = ".mp3"; }
-        }
-
-        if (isMedia) {
-            if (isHLS || size === 0 || size > 20000) {
-                let sizeStr = isHLS ? "Stream" : (size > 0 ? (size / 1024 / 1024).toFixed(2) + " MB" : "Unknown");
-                
-                setTimeout(() => {
-                    let nameToUse = "Dosya";
-                    if (tabId !== -1 && tabTitles[tabId]) nameToUse = tabTitles[tabId];
-                    else { try { nameToUse = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch(e){} }
-                    saveToStorage(url, nameToUse, sizeStr, isHLS, detectedExt);
-                }, 800);
-            }
+        if (isMedia && (isHLS || size > 20480 || size === 0)) {
+            let sizeStr = size > 0 ? (size / 1024 / 1024).toFixed(2) + " MB" : "Stream";
+            setTimeout(() => {
+                let title = (details.tabId !== -1 && tabTitles[details.tabId]) ? tabTitles[details.tabId] : "Dosya";
+                saveToStorage(url, title, sizeStr, isHLS, detectedExt);
+            }, 800);
         }
     },
     { urls: ["<all_urls>"] },

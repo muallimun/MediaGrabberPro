@@ -1,10 +1,15 @@
-// content.js - V68
+// content.js - V70 (Safe Context & Robust Naming)
+
+function isContextValid() {
+    return !!chrome.runtime && !!chrome.runtime.id;
+}
 
 function findBestTitle(element) {
+    if (!element) return "";
     let current = element;
     const blackList = ["play", "pause", "stop", "indir", "download", "oynat", "kapat", "daha", "yükle", "listen", "click", "button", "menu", "list", "volume"];
 
-    // 1. Diyanet Radyo Özel Kart Yapısı (KORUNDU)
+    // 1. Kart Yapıları (KORUNDU)
     const cardContainer = element.closest('div[class*="broadcastFlowCard"], div[class*="card"], div[class*="item"], li, tr');
     if (cardContainer) {
         const headers = cardContainer.querySelectorAll('h3, h4, h5, strong, .title, [class*="title"]');
@@ -16,7 +21,7 @@ function findBestTitle(element) {
         }
     }
 
-    // 2. YENİ: Video Başlığı
+    // 2. Video Başlığı
     if (element.tagName === 'VIDEO' || element.closest('video') || element.closest('.player')) {
         const videoContainer = element.closest('article, .video-container, .player-wrapper, body');
         if (videoContainer) {
@@ -31,10 +36,8 @@ function findBestTitle(element) {
     current = element;
     for (let i = 0; i < 6; i++) {
         if (!current || current.tagName === 'BODY') break;
-        
         const label = current.getAttribute('aria-label') || current.title;
         if (label && label.length > 3 && !blackList.some(b => label.toLowerCase().includes(b))) return label.trim();
-        
         if (current.innerText && current.innerText.length > 3 && current.innerText.length < 150) {
              const lines = current.innerText.split('\n');
              for(let line of lines) {
@@ -48,26 +51,31 @@ function findBestTitle(element) {
 }
 
 const handleInteraction = (e) => {
-    const title = findBestTitle(e.target);
-    if (title) {
-        let safeName = title.replace(/[\/\\?%*:|"<>]/g, '').trim();
-        chrome.runtime.sendMessage({ action: "SET_TITLE", payload: safeName });
-    }
+    if (!isContextValid()) return;
+    try {
+        const title = findBestTitle(e.target);
+        if (title) {
+            let safeName = title.replace(/[\/\\?%*:|"<>]/g, '').trim();
+            chrome.runtime.sendMessage({ action: "SET_TITLE", payload: safeName }).catch(() => {});
+        }
+    } catch (err) {}
 };
 
 document.addEventListener('mousedown', handleInteraction, true);
 document.addEventListener('play', handleInteraction, true);
 
-// Scanner (Aynı)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (!isContextValid()) return;
     if (request.action === "SCAN_PAGE") {
         const results = scanPageForAudio();
         chrome.runtime.sendMessage({ action: "ADD_SCANNED_LINKS", payload: results }, (res) => {
+            if (chrome.runtime.lastError) return;
             sendResponse({count: res ? res.addedCount : 0});
         });
-        return true;
+        return true; // Asenkron yanıt için şart
     }
 });
+
 function scanPageForAudio() {
     const foundItems = [];
     const urlsSeen = new Set();
