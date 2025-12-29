@@ -1,4 +1,4 @@
-// popup.js - V83 (Link Copy Restored & All Features Preserved)
+// popup.js - V84 (Select All Fix & All Features Preserved)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMANLARI ---
@@ -106,7 +106,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- DİNLEYİCİLER VE PANELLER ---
+    // --- TÜMÜNÜ SEÇ ONARILMIŞ OLAYI ---
+    selectAllCheckbox.onclick = () => {
+        const checkboxes = document.querySelectorAll('.item-checkbox'); 
+        const isChecked = selectAllCheckbox.checked; 
+        checkboxes.forEach(cb => {
+            cb.checked = isChecked;
+            const div = cb.closest('.item');
+            if (isChecked) { selectedUrls.add(cb.dataset.url); div.classList.add('selected'); }
+            else { selectedUrls.delete(cb.dataset.url); div.classList.remove('selected'); }
+        });
+        updateDownloadButton(); 
+    };
+
+    // --- MESAJ DİNLEYİCİ VE OLAYLAR ---
     chrome.runtime.onMessage.addListener((msg) => {
         if (msg.action === "DOWNLOAD_STATUS_UPDATE") {
             downloadingUrls.set(msg.url, msg.status);
@@ -165,6 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (items.length === 0) {
             listDiv.innerHTML = `<div class="empty-state"><div style="font-size:30px; margin-bottom:10px; opacity:0.4;">📭</div><div>Liste Boş</div></div>`; 
             if(allItems.length === 0) { footerControls.style.display = 'none'; saveListBtn.style.display = 'none'; searchBox.parentElement.style.display = 'none'; }
+            // Boş listede Tümünü Seç kutusunu temizle
+            selectAllCheckbox.checked = false;
             return;
         }
         footerControls.style.display = 'flex'; 
@@ -199,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="action-col">
                     <button class="icon-btn play-btn" title="Oynat">${icons.play}</button>
                     <button class="icon-btn edit-btn" title="Düzenle">${icons.edit}</button>
-                    <button class="icon-btn copy-btn" title="Linki Kopyala">${icons.copy}</button> <button class="icon-btn dl-btn" title="İndir">${dlIcon}</button>
+                    <button class="icon-btn copy-btn" title="Linki Kopyala">${icons.copy}</button>
+                    <button class="icon-btn dl-btn" title="İndir">${dlIcon}</button>
                     <button class="icon-btn del-btn" title="Sil">${icons.del}</button>
                 </div>
             `;
@@ -207,6 +223,12 @@ document.addEventListener('DOMContentLoaded', () => {
             div.querySelector('.item-checkbox').onchange = (e) => {
                 if(e.target.checked) { selectedUrls.add(item.url); div.classList.add('selected'); } 
                 else { selectedUrls.delete(item.url); div.classList.remove('selected'); }
+                
+                // --- ONARIM: Manuel seçimde Tümünü Seç kutusunu güncelle ---
+                const currentCheckboxes = document.querySelectorAll('.item-checkbox');
+                const allChecked = Array.from(currentCheckboxes).every(cb => cb.checked);
+                selectAllCheckbox.checked = currentCheckboxes.length > 0 && allChecked;
+                
                 updateDownloadButton(); 
             };
             
@@ -223,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            // LİNK KOPYALAMA İŞLEVİ (GERİ GETİRİLDİ)
             div.querySelector('.copy-btn').onclick = () => {
                 navigator.clipboard.writeText(item.url);
                 showToast("Link Kopyalandı");
@@ -242,7 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             listDiv.appendChild(div); 
         });
-        selectAllCheckbox.checked = (selectedUrls.size > 0 && selectedUrls.size === items.length); 
+
+        // --- ONARIM: Filtre değiştiğinde Tümünü Seç kutusunu görünür olanlara göre güncelle ---
+        const allVisibleSelected = items.length > 0 && items.every(i => selectedUrls.has(i.url));
+        selectAllCheckbox.checked = allVisibleSelected;
     }
 
     function updateDownloadButton() {
@@ -255,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadAllBtn.textContent = "⬇ TÜMÜNÜ İNDİR"; 
             downloadAllBtn.style.background = "#10b981";
             clearBtn.textContent = "🗑 TÜMÜNÜ SİL"; 
+            selectAllCheckbox.checked = false; // Seçim kalmadıysa üst kutuyu boşalt
         }
     }
 
@@ -282,7 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearBtn.onclick = () => {
         if(confirm("Emin misiniz?")) {
-            chrome.runtime.sendMessage({action: selectedUrls.size > 0 ? "DELETE_LIST":"CLEAR", urls: Array.from(selectedUrls)}, () => {
+            const urlsToDelete = Array.from(selectedUrls);
+            chrome.runtime.sendMessage({action: selectedUrls.size > 0 ? "DELETE_LIST":"CLEAR", urls: urlsToDelete}, () => {
                 selectedUrls.clear(); fetchAndRender();
             });
         }

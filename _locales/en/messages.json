@@ -1,0 +1,22 @@
+{
+  "appName": { "message": "Universal Media Grabber Pro" },
+  "appDesc": { "message": "Professional media sniffer and downloader." },
+  "listTitle": { "message": "Captured Media" },
+  "downloadBtn": { "message": "Download" },
+  "deleteBtn": { "message": "Delete" },
+  "downloadAll": { "message": "⬇ DOWNLOAD ALL" },
+  "clear": { "message": "CLEAR" },
+  "listEmpty": { "message": "List Empty" },
+  "listEmptyDesc": { "message": "Play media to capture." },
+  "confirmClear": { "message": "Clear list?" },
+  "confirmDownload": { "message": "Download all files?" },
+  "downloadStarted": { "message": "Started..." },
+  "scanBtn": { "message": "SCAN" },
+  "scanResult": { "message": "$COUNT$ files found.", "placeholders": { "count": { "content": "$1" } } },
+
+  "helpTitle": { "message": "How to use?" },
+  "helpStep1": { "message": "1. Sniff: Play media, it appears automatically." },
+  "helpStep2": { "message": "2. Preview: Click 'Play' button to listen." },
+  "helpStep3": { "message": "3. Download: Save files individually or all at once." },
+  "helpTip": { "message": "Tip: Turn off 'Ask where to save' in Chrome Settings for batch download." }
+}

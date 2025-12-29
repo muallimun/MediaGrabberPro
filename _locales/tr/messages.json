@@ -1,0 +1,22 @@
+{
+  "appName": { "message": "Universal Media Grabber Pro" },
+  "appDesc": { "message": "Profesyonel medya yakalayıcı ve indirici." },
+  "listTitle": { "message": "Yakalanan Medyalar" },
+  "downloadBtn": { "message": "İndir" },
+  "deleteBtn": { "message": "Sil" },
+  "downloadAll": { "message": "⬇ TÜMÜNÜ İNDİR" },
+  "clear": { "message": "TEMİZLE" },
+  "listEmpty": { "message": "Liste Boş" },
+  "listEmptyDesc": { "message": "Bir medya oynatın." },
+  "confirmClear": { "message": "Liste temizlensin mi?" },
+  "confirmDownload": { "message": "Tüm dosyalar indirilecek. Emin misiniz?" },
+  "downloadStarted": { "message": "İndirme Başladı..." },
+  "scanBtn": { "message": "TARAMA" },
+  "scanResult": { "message": "$COUNT$ dosya bulundu.", "placeholders": { "count": { "content": "$1" } } },
+  
+  "helpTitle": { "message": "Nasıl Kullanılır?" },
+  "helpStep1": { "message": "1. Yakala: Bir medya oynatın, otomatik listeye düşer." },
+  "helpStep2": { "message": "2. Dinle: 'Play' butonu ile önizleme yapın." },
+  "helpStep3": { "message": "3. İndir: Tek tek veya toplu olarak indirin." },
+  "helpTip": { "message": "İpucu: Toplu indirme için Chrome ayarlarından 'İndirmeden önce sor' seçeneğini kapatın." }
+}
