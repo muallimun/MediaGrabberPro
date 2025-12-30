@@ -4,286 +4,182 @@
     <meta charset="UTF-8">
     <title>Media Grabber Pro</title>
     <style>
-        /* TÜM ORİJİNAL TASARIM VE DEĞİŞKENLER KORUNDU */
         :root {
             --primary: #2563eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --text-main: #334155; --text-sub: #64748b;
         }
-
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            width: 650px; /* Genişlik 650px yapıldı */
-            margin: 0; padding: 0; background-color: #ffffff; color: var(--text-main);
-            font-size: 14px; -webkit-font-smoothing: antialiased; 
-        }
-
-        /* Header */
-        .header { 
-            background: var(--dark); color: white; padding: 14px 20px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; z-index: 20;
-        }
-        h3 { margin: 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; letter-spacing: 0.3px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: 650px; margin: 0; padding: 0; background-color: #ffffff; color: var(--text-main); font-size: 14px; -webkit-font-smoothing: antialiased; }
+        .header { background: var(--dark); color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; z-index: 20; }
         .badge { background: var(--danger); padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-        
         .header-actions { display: flex; gap: 8px; }
-        .icon-btn-header { 
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
-            color: white; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-        }
-        .icon-btn-header:hover { background: rgba(255,255,255,0.25); }
+        .icon-btn-header { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        #settingsPanel, #infoPanel { display: none; background: #fff; padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 12px; position: absolute; top: 60px; left: 0; right: 0; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #infoPanel { background: #f0f7ff; color: #1e3a8a; height: 475px; overflow-y: auto; box-sizing: border-box; }
 
-        /* Kapat Butonu Özel Stili */
-        #closeBtn:hover { background: rgba(239, 68, 68, 0.8); border-color: #ef4444; }
-
-   /* GÜNCELLENMİŞ (TEMİZ HALİ) */
-#settingsPanel {
-    display: none; background: #fff; padding: 15px 20px; border-bottom: 1px solid var(--border);
-    font-size: 12px; line-height: 1.5; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
-    position: absolute; top: 60px; left: 0; right: 0; z-index: 50;
-}
-        #infoPanel { 
-    display: none; 
-    background: #fffbeb; 
-    color: #92400e; 
-    border-bottom: 1px solid #fcd34d;
-    font-size: 12px; 
-    line-height: 1.5; 
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-    position: absolute; 
-    top: 60px; 
-    left: 0; 
-    right: 0; 
-    z-index: 999; /* Panelin her zaman en üstte kalması için */
-    height: 475px; /* Popup boyutuyla uyumlu sabit yükseklik */
-    overflow-y: auto; /* Kaydırma çubuğunun aktif olması için */
-    padding: 10px 20px; 
-    box-sizing: border-box; /* Padding taşmasını engeller */
-}
-
-        /* Sekmeler ve Sıralama Satırı */
-        .controls-row { 
-            display: flex; background: #f1f5f9; padding: 4px; gap: 4px; 
-            border-bottom: 1px solid var(--border); align-items: center; 
-        }
+        .controls-row { display: flex; background: #f1f5f9; padding: 4px; gap: 4px; border-bottom: 1px solid var(--border); align-items: center; }
         .tabs-container { display: flex; flex: 1; gap: 4px; }
-        .tab-btn { 
-            flex: 1; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; 
-            font-size: 11px; font-weight: 600; color: var(--text-sub); background: transparent; 
-            transition: all 0.2s; text-transform: uppercase; 
-        }
-        .tab-btn:hover { background: rgba(0,0,0,0.05); color: var(--text-main); }
+        .tab-btn { flex: 1; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-sub); background: transparent; text-transform: uppercase; }
         .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        #sortSelect { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; background: white; cursor: pointer; outline: none; }
 
-        /* Sıralama Menüsü Stili */
-        #sortSelect { 
-            padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); 
-            font-size: 11px; background: white; color: var(--text-main); 
-            cursor: pointer; outline: none; margin-right: 4px;
-        }
-
-        /* Liste ve Ögeler */
         #list { height: 320px; overflow-y: auto; padding: 0; }
-        .item { 
-            display: flex; align-items: center; padding: 8px 20px; 
-            border-bottom: 1px solid var(--border); background: white; height: 48px;
-            transition: background 0.1s;
-        }
-        .item:hover { background-color: #f8fafc; }
+        .item { display: flex; align-items: center; padding: 8px 20px; border-bottom: 1px solid var(--border); background: white; height: 52px; transition: 0.1s; }
         .item.selected { background-color: #f0f9ff; }
-        
         .check-col { width: 30px; display: flex; align-items: center; justify-content: center; }
-        input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--primary); }
-
         .info-col { flex: 1; display: flex; align-items: center; gap: 12px; overflow: hidden; margin-right: 10px; }
-        .file-icon { color: var(--text-sub); font-size: 16px; width: 32px; height: 32px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .file-details { overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+        .file-icon { color: var(--text-sub); width: 32px; height: 32px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .file-details { overflow: hidden; display: flex; flex-direction: column; }
         .name { font-weight: 500; font-size: 13px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;}
-        
-        /* Renkli Etiketler ve Meta Bilgisi */
         .meta { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
-        .tag { background: #e2e8f0; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; text-transform: uppercase; }
-        .tag.video-tag { background: #dbeafe; color: #1e40af; }
-        .tag.audio-tag { background: #fef3c7; color: #92400e; }
-        .size-info { font-weight: 600; color: var(--text-main); background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
+        .tag { background: #e2e8f0; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; }
 
         .action-col { display: flex; gap: 4px; align-items: center; }
-        .icon-btn { width: 28px; height: 28px; border: 1px solid transparent; border-radius: 4px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
+        .icon-btn { width: 28px; height: 28px; border-radius: 4px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-sub); border:none; }
         .icon-btn:hover { background: #f1f5f9; color: var(--primary); }
         
-        .play-btn:hover { color: var(--primary); background: #eff6ff; }
-        .play-btn.active { color: white; background: var(--primary); }
-        .edit-btn:hover { color: var(--warning); background: #fffbeb; }
-        .copy-btn:hover { color: #8b5cf6; background: #f5f3ff; }
-        .dl-btn:hover { color: var(--success); background: #f0fdf4; }
-        .del-btn:hover { color: var(--danger); background: #fef2f2; }
-
-        /* İndirme Animasyonu */
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .spinner { animation: spin 1s linear infinite; }
-
-        /* Footer ve Diğerleri */
         .footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; gap: 10px; }
-        .main-btn { flex: 1; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; text-transform: uppercase; white-space: nowrap; }
-        
+        .main-btn { flex: 1; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase; white-space: nowrap; transition: 0.2s; }
         #downloadAll { background: var(--success); color: white; flex: 1.5; }
-        #downloadAll:hover { background: #059669; }
         #downloadZip { background: var(--warning); color: white; }
-        #downloadZip:hover { background: #d97706; }
-        #clearAll { background: white; color: var(--text-sub); border: 1px solid var(--border); flex: 0.4; }
-        #clearAll:hover { border-color: var(--danger); color: var(--danger); }
+        #clearAll { background: white; color: var(--text-sub); border: 1px solid var(--border); flex: 0.6; }
+        #clearAll:hover { color: var(--danger); border-color: var(--danger); }
 
-        #toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1e293b; color: white; padding: 8px 16px; border-radius: 6px; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 100; display: flex; align-items: center; gap: 8px;}
+        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1e293b; color: white; padding: 10px 20px; border-radius: 8px; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100; font-weight: 600; }
         #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
         
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; border: 2px solid #fff; }
-
-        /* Video Modal */
-        #videoModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; 
-            justify-content: center; align-items: center;
-        }
-        #videoPlayer { width: 90%; max-height: 80%; border-radius: 8px; outline: none; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        .close-video {
-            position: absolute; top: 20px; right: 20px; background: #fff; color: #333;
-            border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;
-        }
-        
-        /* Detaylı Bilgi ve Ayarlar CSS */
-        .setting-item { margin-bottom: 12px; }
-        .setting-label { display: block; font-weight: 600; margin-bottom: 4px; color: var(--text-main); }
-        .setting-input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box;}
-        .save-settings-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600;}
         .search-box-container { padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); }
-        #searchBox { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: inherit; }
-        .setting-note { font-size: 11px; color: var(--text-sub); margin-top: 3px; display: block; font-style: italic;}
+        #searchBox { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 14px; box-sizing: border-box; }
         
-        /* Yardım Paneli İçerik Stilleri */
-        .info-content { 
-    padding: 5px 0 20px 0; /* Alttan ekstra boşluk bırakıldı */
-}
-        .info-section-title { font-weight: 700; color: var(--primary); margin: 15px 0 10px 0; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .info-section-title:first-child { margin-top: 0; }
-        .step { display: flex; gap: 10px; margin-bottom: 8px; background: #f8fafc; padding: 8px; border-radius: 6px; border-left: 3px solid var(--primary); }
-        .step-num { font-weight: 800; font-size: 16px; color: var(--primary); }
-        .step-text { font-size: 12px; color: var(--text-main); }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;}
-        .info-item { display: flex; align-items: center; gap: 6px; font-size: 11px; background: #f8fafc; padding: 5px; border-radius: 4px;}
-        .key-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; color: #555; }
-        .warning-box { background: #fef2f2; border-left: 3px solid var(--danger); padding: 10px; margin-top: 10px; border-radius: 4px; color: #991b1b; font-size: 11px; }
+        .help-section { margin-bottom: 20px; background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e9ff; }
+        .help-title { font-weight: 800; font-size: 14px; margin-bottom: 10px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .help-item { display: flex; gap: 10px; margin-bottom: 12px; }
+        .help-icon { font-size: 18px; width: 24px; text-align: center; }
+        .help-text b { display: block; color: var(--dark); font-size: 13px; }
+        .help-text span { font-size: 11px; color: var(--text-sub); }
+
+        .setting-item { margin-bottom: 15px; }
+        .setting-label { display: block; font-weight: 700; margin-bottom: 6px; }
+        .setting-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
+        .opt-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 5px; }
+        
+        #videoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; }
+        #videoPlayer { width: 90%; max-height: 80%; border-radius: 8px; outline: none; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
     <div id="videoModal">
-        <button class="close-video" id="closeVideoBtn">KAPAT</button>
+        <button id="closeVideoBtn" style="position:absolute; top:20px; right:20px; background:#fff; border:none; border-radius:4px; font-weight:800; cursor:pointer;">KAPAT</button>
         <video id="videoPlayer" controls></video>
     </div>
 
     <div class="header">
-        <div class="header-left">
-            <input type="checkbox" id="selectAll" title="Tümünü Seç / Kaldır">
-            <div style="font-weight: 600; display: inline-block; margin-left: 10px;">Grabber <span id="countBadge" class="badge">0</span></div>
+        <div class="header-left" style="display:flex; align-items:center;">
+            <input type="checkbox" id="selectAll">
+            <div style="font-weight: 800; font-size:16px; margin-left: 12px;">Grabber <span id="countBadge" class="badge">0</span></div>
         </div>
         <div class="header-actions">
-            <button id="saveList" class="icon-btn-header" title="Listeyi Metin Olarak Kaydet">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            </button>
-            <button id="settingsToggle" class="icon-btn-header" title="Ayarlar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </button>
-            <button id="infoToggle" class="icon-btn-header" title="Yardım">?</button>
-            <button id="closePopup" class="icon-btn-header" id="closeBtn" title="Kapat" style="border-color:rgba(239,68,68,0.5); color:#fca5a5;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
+            <button id="saveList" class="icon-btn-header" data-i18n-title="saveListBtn">💾</button>
+            <button id="settingsToggle" class="icon-btn-header" data-i18n-title="settingsTitle">⚙️</button>
+            <button id="infoToggle" class="icon-btn-header" data-i18n-title="helpTitle">?</button>
+            <button id="closePopup" class="icon-btn-header" style="background:#ef4444;">✖</button>
         </div>
     </div>
 
     <div id="settingsPanel">
         <div class="setting-item">
-            <label class="setting-label">İndirme Klasörü Adı:</label>
-            <input type="text" id="folderNameInput" class="setting-input" placeholder="MediaGrabber_Downloads">
-            <span class="setting-note">Dosyalar <b>"İndirilenler"</b> klasörünün içine açılacak bu klasöre iner.</span>
+            <label class="setting-label" data-i18n="folderLabel"></label>
+            <input type="text" id="folderNameInput" class="setting-input">
         </div>
         <div class="setting-item">
-            <label class="setting-label">Liste Kayıt Dosya Adı:</label>
-            <input type="text" id="listNameInput" class="setting-input" placeholder="Media_List.txt">
+            <label class="setting-label" data-i18n="namingMethodLabel"></label>
+            <select id="namingMethod" class="setting-input">
+                <option value="smart" data-i18n="smartNaming"></option>
+                <option value="pageTitle" data-i18n="pageTitleNaming"></option>
+                <option value="urlSuffix" data-i18n="urlSuffixNaming"></option>
+                <option value="custom" data-i18n="customNaming"></option>
+            </select>
+        </div>
+        <div id="customNameContainer" class="setting-item" style="display:none;">
+            <label class="setting-label" data-i18n="customNameLabel"></label>
+            <input type="text" id="customNameInput" class="setting-input">
         </div>
         <div class="setting-item">
-            <label class="setting-label">Otomatik Temizleme:</label>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="autoClearCheck" style="width: 14px; height: 14px; cursor: pointer;">
-                <span style="font-size: 11px; color: var(--text-main);">Tarayıcı açıldığında listeyi temizle</span>
+            <label class="setting-label" data-i18n="extraInfoLabel"></label>
+            <div class="opt-row">
+                <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="addDomain"> <span data-i18n="addDomain"></span></label>
+                <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="addDate"> <span data-i18n="addDate"></span></label>
+                <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="addTime"> <span data-i18n="addTime"></span></label>
             </div>
         </div>
-        <button id="saveSettings" class="save-settings-btn">AYARLARI KAYDET</button>
+        <div class="setting-item">
+            <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="autoClearCheck"> <span data-i18n="autoClearLabel"></span></label>
+        </div>
+        <button id="saveSettings" class="main-btn" style="background:var(--primary); color:white; width:100%; height:40px;" data-i18n="saveSettingsBtn"></button>
     </div>
 
     <div id="infoPanel">
-        <div class="info-content">
-            <div class="info-section-title">🚀 Hızlı Başlangıç</div>
-            <div class="step">
-                <div class="step-num">1</div>
-                <div class="step-text"><strong>Yakala:</strong> Medya (Radyo, Podcast vb.) oynatın. Eklenti otomatik olarak listeye ekler.</div>
+        <div class="help-section">
+            <div class="help-title">🚀 Media Grabber Pro v29.2.0</div>
+            <div class="help-item">
+                <div class="help-icon">⚡</div>
+                <div class="help-text"><b data-i18n="helpStep1Title"></b><span data-i18n="helpStep1Desc"></span></div>
             </div>
-            <div class="step">
-                <div class="step-num">2</div>
-                <div class="step-text"><strong>İndir:</strong> Listeden seçip indirin veya "Tümünü İndir" butonunu kullanın.</div>
+            <div class="help-item">
+                <div class="help-icon">📦</div>
+                <div class="help-text"><b data-i18n="helpStep2Title"></b><span data-i18n="helpStep2Desc"></span></div>
             </div>
-
-            <div class="info-section-title">⚙️ Özellikler ve Butonlar</div>
-            <div class="info-grid">
-                <div class="info-item"><span class="key-icon">▶</span> Dinle / Önizleme</div>
-                <div class="info-item"><span class="key-icon">✏️</span> İsim Değiştir</div>
-                <div class="info-item"><span class="key-icon">💾</span> Linki Kopyala</div>
-                <div class="info-item"><span class="key-icon">⬇</span> Tek Dosyayı İndir</div>
-                <div class="info-item"><span class="key-icon">ZIP</span> Toplu Sıkıştır</div>
+        </div>
+        <div class="help-section" style="border-color:#dcfce7; background:#f0fdf4;">
+            <div class="help-title" style="color:#166534;">⚙️ <span data-i18n="guideNamingTitle"></span></div>
+            <div class="help-item">
+                <div class="help-icon">🏷️</div>
+                <div class="help-text"><b data-i18n="smartNaming"></b><span data-i18n="smartNamingDesc"></span></div>
             </div>
-
-            <div class="warning-box">
-                <strong>⚠️ Önemli Uyarı (Toplu İndirme):</strong><br>
-                Çok sayıda dosyayı kesintisiz indirmek için Chrome ayarlarından <u>"İndirmeden önce sor"</u> seçeneğini <strong>KAPALI</strong> duruma getirin.
+            <div class="help-item">
+                <div class="help-icon">⏱️</div>
+                <div class="help-text"><b data-i18n="timeNamingTitle"></b><span data-i18n="timeNamingDesc"></span></div>
             </div>
+        </div>
+        <div style="background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; color: #92400e; font-size: 11px;">
+            <strong data-i18n="helpTipTitle"></strong>: <span data-i18n="helpTip"></span>
         </div>
     </div>
 
-    <div class="search-box-container">
-        <input type="text" id="searchBox" placeholder="Dosya adı ara...">
-    </div>
+    <div class="search-box-container"><input type="text" id="searchBox" data-i18n-placeholder="searchPlaceholder"></div>
 
     <div class="controls-row">
-        <div class="tabs-container" id="tabsContainer">
-            <button class="tab-btn active" data-filter="all">Hepsi</button>
-            <button class="tab-btn" data-filter="audio">🎵 Sesler</button>
-            <button class="tab-btn" data-filter="video">🎬 Videolar</button>
+        <div class="tabs-container">
+            <button class="tab-btn active" data-filter="all" data-i18n="tabAll"></button>
+            <button class="tab-btn" data-filter="audio" data-i18n="tabAudio"></button>
+            <button class="tab-btn" data-filter="video" data-i18n="tabVideo"></button>
         </div>
-        <div class="sort-container">
-            <select id="sortSelect" title="Sıralama Seçenekleri">
-                <option value="newest">Tarih (En Yeni)</option>
-                <option value="oldest">Tarih (En Eski)</option>
-                <option value="name_asc">İsim (A-Z)</option>
-                <option value="size_desc">Boyut (Büyükten Küçüğe)</option>
-            </select>
-        </div>
+        <select id="sortSelect">
+            <option value="newest" data-i18n="sortNewest"></option>
+            <option value="oldest" data-i18n="sortOldest"></option>
+            <option value="name_asc" data-i18n="sortNameAZ"></option>
+            <option value="name_desc" data-i18n="sortNameZA"></option>
+            <option value="size_desc" data-i18n="sortSizeLarge"></option>
+            <option value="size_asc" data-i18n="sortSizeSmall"></option>
+        </select>
     </div>
 
-    <div id="list"><div class="empty-state">Yükleniyor...</div></div>
+    <div id="list"></div>
     
     <div class="footer" id="footerControls">
-        <button id="downloadAll" class="main-btn">⬇ TÜMÜNÜ İNDİR</button>
-        <button id="downloadZip" class="main-btn" title="Zip Olarak İndir">📦 ZIP</button>
-        <button id="clearAll" class="main-btn" title="Temizle">🗑 SİL</button>
+        <button id="downloadAll" class="main-btn" data-i18n="downloadAll"></button>
+        <button id="downloadZip" class="main-btn" data-i18n-title="zipTitle">📦 ZIP</button>
+        <button id="clearAll" class="main-btn" data-i18n="clear"></button>
     </div>
 
-    <div id="toast"><span id="toastIcon">✅</span> <span id="toastMsg">İşlem Başarılı</span></div>
+    <div id="toast"><span id="toastMsg"></span></div>
     
-    <div style="text-align:center; padding-bottom:8px; background:#f8fafc; font-size:9px; color:#cbd5e1;">
-        Powered by <a href="https://www.muallimun.com/" target="_blank" style="color:#94a3b8; text-decoration:none; font-weight:600;">Muallimun.Net</a>
+    <div style="text-align:center; padding:10px 0; background:#f1f5f9; font-size:11px; font-weight:700; border-top:1px solid var(--border);">
+        Powered by <a href="https://www.muallimun.com/MediaGrabberPro/" target="_blank" style="color:var(--primary); text-decoration:none;">www.muallimun.net</a>
     </div>
-
     <script src="popup.js"></script>
 </body>
 </html>

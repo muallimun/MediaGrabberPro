@@ -1,227 +1,175 @@
-// background.js - V80 (Kritik Hata Düzeltmeleri & Tam Mantık)
+// background.js - v29.2.0 (Naming, Deletion Restoration & Spam Shield - FULL)
 
 let tabTitles = {}; 
-const processedUrls = new Set();
-const processedBaseUrls = new Set(); 
-const recentSaves = new Set();
-const activeDownloads = new Map(); // downloadId -> url
+const processedBaseUrls = new Set(); // Silinenlerin tekrar yakalanabilmesi için Set olarak tutuluyor
+const activeDownloads = new Map();
 
 const trMap = {'ç':'c','Ç':'C','ğ':'g','Ğ':'G','ı':'i','İ':'I','ö':'o','Ö':'O','ş':'s','Ş':'S','ü':'u','Ü':'U'};
 
-try { importScripts('jszip.min.js'); } catch (e) { console.error("JSZip yüklenemedi:", e); }
+try { importScripts('jszip.min.js'); } catch (e) { console.error("JSZip yüklenemedi"); }
 
 function sanitizeFilename(name) {
-    if (!name || name === "undefined" || name === "null" || name === "Dosya" || name.trim() === "") return "Media_" + Date.now();
+    if (!name || name === "undefined" || name === "null" || name === "Dosya") return "Media_" + Date.now();
     let cleanName = name.replace(/[çÇğĞıİöÖşŞüÜ]/g, match => trMap[match] || match);
-    cleanName = cleanName.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-.]/g, '');
-    if (cleanName.length > 120) cleanName = cleanName.substring(0, 120);
-    return cleanName;
+    return cleanName.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-.]/g, '').substring(0, 110);
 }
 
-function getBaseUrl(url) { try { return url.split('?')[0]; } catch(e) { return url; } }
+function normalizeUrl(url) {
+    try {
+        const u = new URL(url);
+        ['token', 'expire', 't', 'timestamp', 'sig'].forEach(p => u.searchParams.delete(p));
+        return u.origin + u.pathname;
+    } catch(e) { return url.split('?')[0]; }
+}
 
 function updateBadge() {
-    chrome.storage.local.get({ mediaList: [] }, (result) => {
-        const count = result.mediaList ? result.mediaList.length : 0;
+    chrome.storage.local.get({ mediaList: [] }, (res) => {
+        const count = res.mediaList.length;
         chrome.action.setBadgeText({text: count > 0 ? count.toString() : ""});
         chrome.action.setBadgeBackgroundColor({color: "#e74c3c"});
     });
 }
 
-// İndirme Durumu Takibi
-chrome.downloads.onChanged.addListener((delta) => {
-    if (activeDownloads.has(delta.id)) {
-        const url = activeDownloads.get(delta.id);
-        let status = "downloading";
-        if (delta.state && delta.state.current === "complete") { status = "success"; activeDownloads.delete(delta.id); }
-        else if (delta.error) { status = "error"; activeDownloads.delete(delta.id); }
-        chrome.runtime.sendMessage({ action: "DOWNLOAD_STATUS_UPDATE", url: url, status: status }).catch(() => {});
-    }
-});
+function saveToStorage(url, title, sizeInfo, detectedExt = ".mp3", tabId = -1) {
+    const normUrl = normalizeUrl(url);
+    const baseUrl = url.split('?')[0];
+    if (processedBaseUrls.has(baseUrl)) return; // Spam Shield
 
-// Otomatik Temizleme
-chrome.runtime.onStartup.addListener(() => {
-    chrome.storage.local.get({ autoClear: false }, (res) => {
-        if (res.autoClear) {
-            chrome.storage.local.set({ mediaList: [] }, () => {
-                processedUrls.clear(); processedBaseUrls.clear(); updateBadge();
-            });
-        }
-    });
-});
+    chrome.storage.local.get({ 
+        mediaList: [], namingMethod: 'smart', customName: 'Media',
+        addDomain: false, addDate: false, addTime: false 
+    }, (settings) => {
+        let list = settings.mediaList || [];
+        if (list.some(i => normalizeUrl(i.url) === normUrl)) return;
 
-// --- ANA KAYIT FONKSİYONU (ReferenceError ve Artist Fix) ---
-function saveToStorage(url, title, sizeInfo, isHLS = false, detectedExt = ".mp3") {
-    chrome.storage.local.get({ mediaList: [] }, (result) => {
-        const list = result.mediaList || [];
-        
-        // 1. Link Tekilleştirme (Aynı URL zaten varsa ekleme)
-        if (list.some(i => i.url === url)) return;
+        let baseName = "Media";
 
-        let finalTitle = title;
-        const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-        const genericNames = ["index", "broadcast", "audio", "video", "media", "stream", "playlist", "dosya", "medya"];
-
-        // .mp4 gibi anlamsız veya jenerik isimleri düzelt
-        let check = (finalTitle || "").toLowerCase().split('.')[0];
-        if (!finalTitle || finalTitle.length < 3 || genericNames.includes(check) || isUuid(check)) {
-            try {
-                const urlObj = new URL(url);
-                const parts = urlObj.pathname.split('/').filter(p => p.length > 0);
-                let fName = parts.pop() || "";
-                let folder = parts.pop() || "Media";
-                finalTitle = (genericNames.includes(fName.toLowerCase().split('.')[0]) || fName.length < 3) ? folder : fName.replace(/\.(mp3|m4a|wav|mp4|m3u8|aac)$/i, '');
-            } catch(e) { finalTitle = "Media_" + Date.now().toString().slice(-4); }
+        // --- DİNAMİK İSİMLENDİRME MOTORU ---
+        if (settings.namingMethod === 'smart') {
+            baseName = title || "Dosya";
+            if (baseName === "Dosya") {
+                try { baseName = decodeURIComponent(url.split('/').pop().split('?')[0]).replace(/\.(mp3|mp4|m4a|wav|aac)$/i, ''); } catch(e) {}
+            }
+        } else if (settings.namingMethod === 'pageTitle' && tabId !== -1) {
+            baseName = tabTitles[tabId] || "Sayfa";
+        } else if (settings.namingMethod === 'urlSuffix') {
+            try { baseName = decodeURIComponent(url.split('/').pop().split('?')[0]).replace(/\.(mp3|mp4|m4a|wav|aac)$/i, ''); } catch(e) {}
+        } else if (settings.namingMethod === 'custom') {
+            baseName = settings.customName || "Kayit";
         }
 
-        let filenameToSave = sanitizeFilename(finalTitle);
-        
-        if (detectedExt === ".mp4") {
-            if (!filenameToSave.toLowerCase().endsWith(".mp4")) filenameToSave += ".mp4";
-        } else if (isHLS) {
-            if (!filenameToSave.match(/\.(m3u8|mp3|mp4)$/i)) filenameToSave += ".mp3"; 
-        } else {
-            if (!filenameToSave.toLowerCase().endsWith(detectedExt)) filenameToSave += detectedExt;
+        // Opsiyonel Ek Bilgiler
+        if (settings.addDomain) {
+            try { const dom = new URL(url).hostname.replace('www.', '').replace(/\./g, '_'); baseName += "_" + dom; } catch(e) {}
+        }
+        if (settings.addDate || settings.addTime) {
+            const now = new Date();
+            if (settings.addDate) baseName += "_" + now.getDate().toString().padStart(2,'0') + "_" + (now.getMonth()+1).toString().padStart(2,'0') + "_" + now.getFullYear();
+            if (settings.addTime) baseName += "_" + now.getHours().toString().padStart(2,'0') + "_" + now.getMinutes().toString().padStart(2,'0') + "_" + now.getSeconds().toString().padStart(2,'0');
         }
 
-        // 2. İsim Çakışması Kontrolü (Aynı sanatçı sorunu çözümü)
-        if (list.some(i => i.filename === filenameToSave)) {
-            const timestamp = Date.now().toString().slice(-4);
-            filenameToSave = filenameToSave.replace(/(\.[^.]+)$/, `_${timestamp}$1`);
+        let filenameToSave = sanitizeFilename(baseName);
+        if (!filenameToSave.toLowerCase().endsWith(detectedExt)) filenameToSave += detectedExt;
+
+        // Çakışma Önleyici (Sadece gerçekten aynı isim varsa random sayı ekler)
+        if (list.some(i => i.filename === filenameToSave && normalizeUrl(i.url) !== normUrl)) {
+            filenameToSave = filenameToSave.replace(/(\.[^.]+)$/, `_${Date.now().toString().slice(-4)}$1`);
         }
 
-        // 3. Değişken Tanımlama (ReferenceError Fix)
-        const newItem = { 
-            url: url, 
-            filename: filenameToSave, 
-            size: sizeInfo || "?",
-            type: (detectedExt === ".mp4") ? "video" : (isHLS ? "stream" : "audio"),
-            timestamp: Date.now()
-        };
-
-        list.push(newItem);
+        processedBaseUrls.add(baseUrl);
+        list.push({ url, filename: filenameToSave, size: sizeInfo || "? MB", type: detectedExt === ".mp4" ? "video" : "audio", timestamp: Date.now() });
         chrome.storage.local.set({ mediaList: list }, () => updateBadge());
     });
 }
 
-// MESAJLAR (Tüm Orijinal Mesajlar KORUNDU)
+// MESAJ DİNLEYİCİSİ (Tüm butonların işlevleri burada)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "SET_TITLE") {
-        if (sender.tab) tabTitles[sender.tab.id] = request.payload;
-        sendResponse("OK");
-    }
+    if (request.action === "SET_TITLE" && sender.tab) tabTitles[sender.tab.id] = request.payload;
+    
     if (request.action === "CLEAR") {
-        tabTitles = {};
+        processedBaseUrls.clear(); tabTitles = {};
         chrome.storage.local.set({ mediaList: [] }, () => { updateBadge(); sendResponse("CLEARED"); });
-        return true; 
+        return true;
     }
+    
     if (request.action === "DELETE_ITEM") {
-        chrome.storage.local.get({ mediaList: [] }, (result) => {
-            const newList = result.mediaList.filter(item => item.url !== request.url);
-            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse({status: "Deleted"}); });
+        chrome.storage.local.get({ mediaList: [] }, (res) => {
+            const newList = res.mediaList.filter(i => i.url !== request.url);
+            processedBaseUrls.delete(request.url.split('?')[0]); // Tekrar yakalanabilmesi için temizlendi
+            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse("OK"); });
         }); return true;
     }
+
     if (request.action === "DELETE_LIST") {
-        chrome.storage.local.get({ mediaList: [] }, (result) => {
-            const newList = result.mediaList.filter(item => !request.urls.includes(item.url));
-            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse({status: "Deleted multiple"}); });
+        chrome.storage.local.get({ mediaList: [] }, (res) => {
+            const newList = res.mediaList.filter(i => !request.urls.includes(i.url));
+            request.urls.forEach(u => processedBaseUrls.delete(u.split('?')[0]));
+            chrome.storage.local.set({ mediaList: newList }, () => { updateBadge(); sendResponse("OK"); });
         }); return true;
     }
+
     if (request.action === "RENAME_ITEM") {
-        chrome.storage.local.get({ mediaList: [] }, (result) => {
-            const list = result.mediaList;
-            const idx = list.findIndex(i => i.url === request.url);
+        chrome.storage.local.get({ mediaList: [] }, (res) => {
+            const list = res.mediaList; const idx = list.findIndex(i => i.url === request.url);
             if (idx !== -1) {
-                let newN = sanitizeFilename(request.newName);
                 const ext = list[idx].filename.split('.').pop();
-                if(!newN.includes('.')) newN += "." + ext;
-                list[idx].filename = newN;
-                chrome.storage.local.set({ mediaList: list }, () => sendResponse({status: "Renamed"}));
+                list[idx].filename = sanitizeFilename(request.newName) + "." + ext;
+                chrome.storage.local.set({ mediaList: list }, () => sendResponse("OK"));
             }
         }); return true;
     }
+
     if (request.action === "DOWNLOAD_ONE") {
         chrome.storage.local.get({ folderName: "MediaGrabber_Downloads" }, (s) => {
-            chrome.downloads.download({
-                url: request.url, filename: (s.folderName || "MediaGrabber_Downloads") + "/" + sanitizeFilename(request.filename),
-                conflictAction: 'uniquify'
-            }, (id) => { if (id) activeDownloads.set(id, request.url); sendResponse({success: !!id}); });
-        }); return true;
+            chrome.downloads.download({ url: request.url, filename: (s.folderName || "MediaGrabber_Downloads") + "/" + request.filename, conflictAction: 'uniquify' });
+        });
     }
-    if (request.action === "DOWNLOAD_LIST" || request.action === "DOWNLOAD_ALL") {
-        chrome.storage.local.get({ mediaList: [], folderName: "MediaGrabber_Downloads" }, async (result) => {
-            const folder = result.folderName || "MediaGrabber_Downloads";
-            const targets = request.action === "DOWNLOAD_LIST" ? request.urls : result.mediaList.map(i => i.url);
-            for(let url of targets) {
-                const item = result.mediaList.find(i => i.url === url);
+
+    if (request.action === "DOWNLOAD_LIST") {
+        chrome.storage.local.get({ mediaList: [], folderName: "MediaGrabber_Downloads" }, async (res) => {
+            for(let u of request.urls) {
+                const item = res.mediaList.find(i => i.url === u);
                 if(item) {
-                    chrome.downloads.download({ url: item.url, filename: folder + "/" + sanitizeFilename(item.filename) }, (id) => { if (id) activeDownloads.set(id, item.url); });
-                    await new Promise(r => setTimeout(r, 1200));
+                    chrome.downloads.download({ url: item.url, filename: (res.folderName || "MediaGrabber_Downloads") + "/" + item.filename, conflictAction: 'uniquify' });
+                    await new Promise(r => setTimeout(r, 1200)); // Chrome API limitlerine uygun gecikme
                 }
             }
-        }); sendResponse("BATCH_STARTED");
+        });
     }
-    if (request.action === "DOWNLOAD_ZIP") { downloadAndZip(); sendResponse("ZIP_STARTED"); }
-    if (request.action === "ADD_SCANNED_LINKS") {
-        const links = request.payload;
-        let count = 0;
-        links.forEach(item => { saveToStorage(item.url, item.title, "Scan"); count++; });
-        sendResponse({addedCount: count}); return true;
-    }
+
+    if (request.action === "DOWNLOAD_ZIP") downloadAndZip();
+    return true;
 });
 
-// ZIP ve Network Dinleyici mantığı KORUNDU
 async function downloadAndZip() {
     const zip = new JSZip();
-    const folder = zip.folder("Medya_Arsiv");
     const result = await chrome.storage.local.get({ mediaList: [] });
-    const list = result.mediaList || [];
-    for (const item of list) {
-        try {
-            const response = await fetch(item.url);
-            if (response.ok) {
-                const blob = await response.blob();
-                folder.file(item.filename, blob);
-            }
-        } catch (e) {}
+    for (const item of result.mediaList) {
+        try { const res = await fetch(item.url); if (res.ok) zip.file(item.filename, await res.blob()); } catch (e) {}
     }
-    const content = await zip.generateAsync({type: "blob"});
-    const reader = new FileReader();
-    reader.onload = function() {
-        chrome.downloads.download({ url: reader.result, filename: `Arsiv_${Date.now()}.zip`, saveAs: true });
-    };
-    reader.readAsDataURL(content);
+    zip.generateAsync({type: "blob"}).then(content => {
+        const reader = new FileReader();
+        reader.onload = () => chrome.downloads.download({ url: reader.result, filename: `Archive_${Date.now()}.zip`, saveAs: true });
+        reader.readAsDataURL(content);
+    });
 }
 
-chrome.webRequest.onHeadersReceived.addListener(
-    function(details) {
-        const url = details.url;
-        if (url.includes('google') || url.includes('analytics') || url.includes('facebook')) return;
-        if (url.match(/\.(png|jpg|jpeg|gif|svg|css|js|woff|ttf|ico|json|html|pdf|doc|php)(\?|$)/i)) return;
+chrome.webRequest.onHeadersReceived.addListener((details) => {
+    const url = details.url;
+    if (url.includes('google') || url.match(/\.(ts|m4s|m3u8)(\?|$)/i)) return; // Spam Shield
 
-        const headers = details.responseHeaders;
-        let isMedia = false; let isHLS = false; let size = 0; let detectedExt = ".mp3";
+    let isMedia = false; let size = 0; let ext = ".mp3";
+    details.responseHeaders.forEach(h => {
+        const n = h.name.toLowerCase(); const v = h.value.toLowerCase();
+        if (n === 'content-type') {
+            if (v.includes('audio/')) isMedia = true;
+            if (v.includes('video/')) { isMedia = true; ext = ".mp4"; }
+        }
+        if (n === 'content-length') size = parseInt(v);
+    });
 
-        if (headers) {
-            for (let h of headers) {
-                let name = h.name.toLowerCase();
-                let val = h.value.toLowerCase();
-                if (name === 'content-type') {
-                    if (val.includes('audio/')) { isMedia = true; if(val.includes('wav')) detectedExt=".wav"; }
-                    if (val.includes('video/')) { isMedia = true; detectedExt=".mp4"; }
-                    if (val.includes('mpegurl') || val.includes('hls')) { isMedia = true; isHLS = true; }
-                }
-                if (name === 'content-length') size = parseInt(val);
-            }
-        }
-        if (isMedia && (isHLS || size > 20480 || size === 0)) {
-            let sizeStr = size > 0 ? (size / 1024 / 1024).toFixed(2) + " MB" : "Stream";
-            setTimeout(() => {
-                let title = (details.tabId !== -1 && tabTitles[details.tabId]) ? tabTitles[details.tabId] : "Dosya";
-                saveToStorage(url, title, sizeStr, isHLS, detectedExt);
-            }, 800);
-        }
-    },
-    { urls: ["<all_urls>"] },
-    ["responseHeaders"]
-);
+    if (isMedia && (size > 25000 || size === 0)) {
+        const sizeStr = size > 0 ? (size / 1024 / 1024).toFixed(2) + " MB" : "Unknown";
+        setTimeout(() => saveToStorage(url, tabTitles[details.tabId] || "Dosya", sizeStr, ext, details.tabId), 800);
+    }
+}, { urls: ["<all_urls>"] }, ["responseHeaders"]);

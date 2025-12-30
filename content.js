@@ -1,91 +1,56 @@
-// content.js - V70 (Safe Context & Robust Naming)
+// content.js - V29.2.0 (Robust Title Detection - FULL)
 
-function isContextValid() {
-    return !!chrome.runtime && !!chrome.runtime.id;
-}
+function isContextValid() { return !!chrome.runtime && !!chrome.runtime.id; }
 
 function findBestTitle(element) {
     if (!element) return "";
-    let current = element;
-    const blackList = ["play", "pause", "stop", "indir", "download", "oynat", "kapat", "daha", "yükle", "listen", "click", "button", "menu", "list", "volume"];
+    const blackList = ["play", "pause", "indir", "download", "oynat", "menu", "kapat"];
 
-    // 1. Kart Yapıları (KORUNDU)
-    const cardContainer = element.closest('div[class*="broadcastFlowCard"], div[class*="card"], div[class*="item"], li, tr');
-    if (cardContainer) {
-        const headers = cardContainer.querySelectorAll('h3, h4, h5, strong, .title, [class*="title"]');
-        for (let h of headers) {
-            let text = h.innerText.trim();
-            if (text.length > 3 && !blackList.some(b => text.toLowerCase().includes(b))) {
-                if (!text.match(/^\d{1,2}:\d{2}$/)) return text;
-            }
-        }
-    }
-
-    // 2. Video Başlığı
     if (element.tagName === 'VIDEO' || element.closest('video') || element.closest('.player')) {
-        const videoContainer = element.closest('article, .video-container, .player-wrapper, body');
-        if (videoContainer) {
-            const h1 = videoContainer.querySelector('h1');
-            if (h1 && h1.innerText.length > 3) return h1.innerText.trim();
-            const vTitle = videoContainer.querySelector('.video-title, .entry-title');
-            if (vTitle) return vTitle.innerText.trim();
+        const container = element.closest('article, .video-container, .player-wrapper, [class*="video"], body');
+        if (container) {
+            const titleEl = container.querySelector('h1, h2, .video-title, [class*="title"]');
+            if (titleEl && titleEl.innerText.length > 3) return titleEl.innerText.trim();
         }
     }
 
-    // 3. Genel Arama (KORUNDU)
-    current = element;
+    const card = element.closest('div[class*="broadcastFlowCard"], div[class*="card"], div[class*="item"], li, tr');
+    if (card) {
+        const h = card.querySelector('h3, h4, h5, strong, .title, [class*="title"]');
+        if (h && h.innerText.trim().length > 3) return h.innerText.trim();
+    }
+
+    let cur = element;
     for (let i = 0; i < 6; i++) {
-        if (!current || current.tagName === 'BODY') break;
-        const label = current.getAttribute('aria-label') || current.title;
-        if (label && label.length > 3 && !blackList.some(b => label.toLowerCase().includes(b))) return label.trim();
-        if (current.innerText && current.innerText.length > 3 && current.innerText.length < 150) {
-             const lines = current.innerText.split('\n');
-             for(let line of lines) {
-                 line = line.trim();
-                 if(line.length > 3 && !blackList.some(b => line.toLowerCase().includes(b))) return line;
-             }
-        }
-        current = current.parentElement;
+        if (!cur || cur.tagName === 'BODY') break;
+        const text = cur.innerText || cur.title || cur.getAttribute('aria-label');
+        if (text && text.trim().length > 3 && text.length < 120 && !blackList.some(b => text.toLowerCase().includes(b))) return text.trim();
+        cur = cur.parentElement;
     }
     return "";
 }
 
-const handleInteraction = (e) => {
+const handle = (e) => {
     if (!isContextValid()) return;
-    try {
-        const title = findBestTitle(e.target);
-        if (title) {
-            let safeName = title.replace(/[\/\\?%*:|"<>]/g, '').trim();
-            chrome.runtime.sendMessage({ action: "SET_TITLE", payload: safeName }).catch(() => {});
-        }
-    } catch (err) {}
+    const title = findBestTitle(e.target);
+    if (title) {
+        let safeName = title.replace(/[\/\\?%*:|"<>]/g, '').trim();
+        chrome.runtime.sendMessage({ action: "SET_TITLE", payload: safeName }).catch(() => {});
+    }
 };
 
-document.addEventListener('mousedown', handleInteraction, true);
-document.addEventListener('play', handleInteraction, true);
+document.addEventListener('mousedown', handle, true);
+document.addEventListener('play', handle, true);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (!isContextValid()) return;
     if (request.action === "SCAN_PAGE") {
-        const results = scanPageForAudio();
-        chrome.runtime.sendMessage({ action: "ADD_SCANNED_LINKS", payload: results }, (res) => {
-            if (chrome.runtime.lastError) return;
-            sendResponse({count: res ? res.addedCount : 0});
+        const found = [];
+        document.querySelectorAll('a[href]').forEach(a => {
+            if (a.href.match(/\.(mp3|mp4|wav|m4a|aac)(\?|$)/i)) {
+                found.push({ url: a.href, title: a.innerText.trim() || "Media_File" });
+            }
         });
-        return true; // Asenkron yanıt için şart
+        chrome.runtime.sendMessage({ action: "ADD_SCANNED_LINKS", payload: found });
     }
 });
-
-function scanPageForAudio() {
-    const foundItems = [];
-    const urlsSeen = new Set();
-    document.querySelectorAll('a[href]').forEach(link => {
-        if (link.href.match(/\.(mp3|m4a|wav|aac|mp4)(\?|$)/i)) {
-            if (!urlsSeen.has(link.href)) {
-                foundItems.push({ url: link.href, title: link.innerText.trim() || "Media_File" });
-                urlsSeen.add(link.href);
-            }
-        }
-    });
-    return foundItems;
-}
