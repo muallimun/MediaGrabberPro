@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Universal Media Grabber Pro - Profesyonel Eğitim ve Medya Asistanı</title>
-    <meta name="description" content="EBA ve web sitelerinden ses, video, belge ve SCORM paketlerini akıllı isimlendirme ile tek tıkla indiren profesyonel tarayıcı eklentisi.">
+    <meta name="description" content="Web sitelerinden ses, video, belge ve eğitim paketlerini (SCORM) akıllı isimlendirme ile tek tıkla indiren profesyonel tarayıcı eklentisi.">
     <link rel="icon" type="image/png" href="ikon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #2563eb; --primary-dark: #1d4ed8; --secondary: #0f172a; --accent: #ef4444;
+            --primary: #8e44ad; --primary-dark: #713592; --secondary: #2c3e50; --accent: #27ae60;
             --firefox: #ff7116; --chrome: #4285f4;
             --bg-body: #f8fafc; --bg-card: #ffffff; --text-main: #1e293b; --text-light: #64748b;
-            --border: #e2e8f0; --shadow: 0 10px 30px -10px rgba(0,0,0,0.1); --nav-bg: rgba(255, 255, 255, 0.9);
+            --border: #e2e8f0; --shadow: 0 10px 30px -10px rgba(0,0,0,0.1); --nav-bg: rgba(255, 255, 255, 0.95);
         }
         [data-theme="dark"] {
-            --primary: #3b82f6; --primary-dark: #60a5fa; --secondary: #f8fafc; --bg-body: #0f172a;
+            --primary: #9b59b6; --primary-dark: #8e44ad; --secondary: #f8fafc; --bg-body: #0f172a;
             --bg-card: #1e293b; --text-main: #f1f5f9; --text-light: #94a3b8; --border: #334155;
-            --nav-bg: rgba(15, 23, 42, 0.9);
+            --nav-bg: rgba(15, 23, 42, 0.95);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
@@ -29,8 +29,8 @@
         .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; }
 
         /* --- NAVBAR --- */
-        .navbar { background: var(--nav-bg); backdrop-filter: blur(10px); padding: 12px 6%; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--border); }
-        .logo { font-weight: 800; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; }
+        .navbar { background: var(--nav-bg); backdrop-filter: blur(10px); padding: 12px 6%; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.05);}
+        .logo { font-weight: 800; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; color: var(--text-main); text-decoration: none;}
         .logo img { height: 32px; border-radius: 6px; }
         .nav-links { display: flex; align-items: center; gap: 15px; }
         .control-btns { display: flex; gap: 8px; }
@@ -38,10 +38,10 @@
         .icon-btn:hover { background: var(--border); }
 
         /* --- HERO --- */
-        .hero { padding: 140px 6% 60px; display: flex; align-items: center; max-width: 1300px; margin: 0 auto; gap: 50px; }
+        .hero { padding: 140px 6% 60px; display: flex; align-items: center; max-width: 1400px; margin: 0 auto; gap: 50px; }
         .hero-content { flex: 1.2; }
         .hero h1 { font-size: 3.2rem; font-weight: 900; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px; }
-        .hero h1 span { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero h1 span { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .hero p { font-size: 1.15rem; color: var(--text-light); margin-bottom: 30px; }
         
         .hero-buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -50,31 +50,46 @@
         .btn-firefox { background: var(--firefox); color: white; box-shadow: 0 4px 15px rgba(255,113,22,0.3); }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); opacity: 0.95; }
 
+        .hero-image { flex: 1; position: relative; }
         .browser-mockup { background: var(--bg-card); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.15); border: 1px solid var(--border); }
         .browser-header { background: var(--border); padding: 10px; display: flex; gap: 6px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; }
 
+        /* --- SCREENSHOTS GALLERY --- */
+        .gallery { padding: 60px 6%; max-width: 1400px; margin: 0 auto; background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px;}
+        .gallery-item { border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: 0.3s;}
+        .gallery-item:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+        .gallery-item img { width: 100%; display: block; }
+        .gallery-desc { padding: 15px; background: var(--bg-card); text-align: center; font-weight: 600; font-size: 0.95rem; border-top: 1px solid var(--border);}
+
         /* --- FEATURES GRID --- */
-        .features { padding: 60px 6%; max-width: 1200px; margin: 0 auto; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
-        .feature-card { padding: 30px; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border); transition: 0.3s; box-shadow: var(--shadow); }
-        .feature-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        .feature-card h3 { margin: 15px 0 10px; font-size: 1.25rem; }
-        .feature-card p { font-size: 0.95rem; color: var(--text-light); }
-        .icon-box { font-size: 2.2rem; display: inline-block; padding: 10px; background: rgba(37, 99, 235, 0.05); border-radius: 12px; }
+        .features { padding: 80px 6%; max-width: 1400px; margin: 0 auto; }
+        .section-title { text-align: center; margin-bottom: 50px; }
+        .section-title h2 { font-size: 2.2rem; margin-bottom: 15px; color: var(--secondary); }
+        
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .feature-card { padding: 35px; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border); transition: 0.3s; box-shadow: var(--shadow); position: relative; overflow: hidden;}
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); opacity: 0; transition: 0.3s;}
+        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-card h3 { margin: 20px 0 12px; font-size: 1.3rem; color: var(--secondary);}
+        .feature-card p { font-size: 1rem; color: var(--text-light); }
+        .icon-box { font-size: 2.2rem; display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: rgba(142, 68, 173, 0.08); color: var(--primary); border-radius: 14px; }
 
         /* --- SPECIAL ALERT --- */
-        .special-box { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 40px; border-radius: 20px; margin-bottom: 50px; display: flex; align-items: center; gap: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        .special-box h2 { color: #60a5fa; margin-bottom: 10px; font-size: 1.8rem; }
-        .special-box p { font-size: 1.1rem; color: #cbd5e1; line-height: 1.5; }
+        .special-box { background: linear-gradient(135deg, var(--secondary), #0f172a); color: white; padding: 50px; border-radius: 20px; margin-top: 60px; display: flex; align-items: center; gap: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .special-box h2 { color: #60a5fa; margin-bottom: 15px; font-size: 2rem; }
+        .special-box p { font-size: 1.15rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;}
+        .special-box .tag { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; margin-right: 10px; border: 1px solid rgba(255,255,255,0.2);}
 
         footer { background: #0f172a; color: #94a3b8; padding: 40px 6%; text-align: center; border-top: 1px solid #1e293b; }
-        footer a { transition: color 0.2s; }
-        footer a:hover { color: #60a5fa !important; }
+        footer a { color: #cbd5e1; transition: color 0.2s; text-decoration: none; margin: 0 15px; font-weight: 500;}
+        footer a:hover { color: #60a5fa; }
         
         @media (max-width: 900px) {
             .hero { flex-direction: column; text-align: center; padding-top: 100px; }
-            .hero h1 { font-size: 2.2rem; }
+            .hero h1 { font-size: 2.4rem; }
             .hero-buttons { justify-content: center; }
             .special-box { flex-direction: column; text-align: center; padding: 30px 20px; }
         }
@@ -83,97 +98,126 @@
 <body>
 
     <nav class="navbar">
-        <div class="logo">
+        <a href="#" class="logo">
             <img src="ikon.png" alt="UMGP Logo">
             <span>Media Grabber Pro</span>
-        </div>
+        </a>
         <div class="nav-links">
             <div class="control-btns">
                 <button class="icon-btn" id="langToggle" title="Change Language">🌐 <span id="langLabel">EN</span></button>
                 <button class="icon-btn" id="themeToggle" title="Gece/Gündüz Modu">🌙</button>
             </div>
-            <a href="#download" class="btn btn-chrome" style="padding: 8px 18px; font-size: 12px;" data-t="navInstall">Hemen Ekle</a>
+            <a href="#download" class="btn btn-chrome" style="padding: 8px 18px; font-size: 12px; box-shadow: none;" data-t="navInstall">Hemen Ekle</a>
         </div>
     </nav>
 
     <section class="hero">
         <div class="hero-content animate-up">
-            <div style="background: rgba(37, 99, 235, 0.1); color: var(--primary); padding: 6px 14px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: 800; margin-bottom: 15px;">
+            <div style="background: rgba(142, 68, 173, 0.1); color: var(--primary); padding: 6px 14px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: 800; margin-bottom: 15px; border: 1px solid rgba(142, 68, 173, 0.2);">
                 🚀 <span data-t="heroBadge">v30.1.0 Yayında! Yeni SCORM & Belge Desteği</span>
             </div>
             <h1 data-t="heroTitle">Tüm Dijital İçerikleri<br><span>Tek Tıkla Arşivleyin</span></h1>
             <p data-t="heroDesc">Ses, video, belge ve etkileşimli eğitim paketlerini web sayfalarından anında yakalar. Akıllı isimlendirme, reklam filtresi ve toplu ZIP desteğiyle kusursuz bir indirme deneyimi sunar.</p>
             <div class="hero-buttons" id="download">
                 <a href="https://chromewebstore.google.com/detail/universal-media-grabber-p/klhmnkfafcadbppabkcnokacaflafhdk" target="_blank" class="btn btn-chrome">
-                    <i class="fab fa-chrome"></i> <span>Chrome İçin Ekle</span>
+                    <i class="fab fa-chrome"></i> <span data-t="btnChrome">Chrome İçin Ekle</span>
                 </a>
                 <a href="https://addons.mozilla.org/tr/firefox/addon/universal-media-grabber-pro/" target="_blank" class="btn btn-firefox">
-                    <i class="fab fa-firefox"></i> <span>Firefox İçin Ekle</span>
+                    <i class="fab fa-firefox"></i> <span data-t="btnFirefox">Firefox İçin Ekle</span>
                 </a>
             </div>
         </div>
         <div class="hero-image animate-up delay-1">
             <div class="browser-mockup">
                 <div class="browser-header"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-                <img src="Screenshot_1.png" alt="Universal Media Grabber Pro Arayüzü" style="width:100%; display:block;">
+                <img src="001.png" alt="Universal Media Grabber Pro Ana Ekran" style="width:100%; display:block; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+            </div>
+        </div>
+    </section>
+
+    <!-- EKRAN GÖRÜNTÜLERİ GALERİSİ -->
+    <section class="gallery">
+        <div class="section-title animate-up" style="margin-bottom: 20px; padding-top: 40px;">
+            <h2 data-t="galleryTitle">Profesyonel Arayüz</h2>
+            <p data-t="galleryDesc" style="color: var(--text-light); font-size: 1.1rem;">Kullanıcı dostu menüler ve gelişmiş ayarlar.</p>
+        </div>
+        <div class="gallery-grid">
+            <div class="gallery-item animate-up delay-1">
+                <img src="003.png" alt="Detaylı Kontrol Menüsü">
+                <div class="gallery-desc" data-t="gal1">Hızlı Erişim Menüsü ve Kısayollar</div>
+            </div>
+            <div class="gallery-item animate-up delay-2">
+                <img src="004.png" alt="Gelişmiş Ayarlar">
+                <div class="gallery-desc" data-t="gal2">Özelleştirilebilir İsimlendirme ve Filtreler</div>
+            </div>
+            <div class="gallery-item animate-up delay-2">
+                <img src="002.png" alt="Kullanım Kılavuzu">
+                <div class="gallery-desc" data-t="gal3">Entegre Yardım ve Bilgi Paneli</div>
             </div>
         </div>
     </section>
 
     <div class="features">
-        <div class="special-box animate-up">
-            <div style="font-size: 55px;">🎓</div>
-            <div>
-                <h2 data-t="ebaTitle">Eğitimciler ve Öğrenciler İçin Kusursuz Asistan</h2>
-                <p data-t="ebaDesc">EBA (eba.gov.tr) ve benzeri eğitim platformlarındaki ders videolarını, PDF dokümanlarını ve <b>SCORM etkileşimli eğitim paketlerini</b> saniyeler içinde yakalayın. İçerikleri anlamsız kodlarla değil, gerçek konu ve ders isimleriyle indirerek çevrimdışı materyal arşivinizi saniyeler içinde oluşturun.</p>
-            </div>
-        </div>
-
-        <div class="section-title animate-up" style="margin-bottom: 40px; text-align: center;">
-            <h2 data-t="featTitle" style="font-size: 2.2rem; margin-bottom: 10px;">Sıradan Bir İndiriciden Çok Daha Fazlası</h2>
+        <div class="section-title animate-up">
+            <h2 data-t="featTitle">Sıradan Bir İndiriciden Çok Daha Fazlası</h2>
             <p data-t="featDesc" style="color: var(--text-light); font-size: 1.1rem;">Medya ve belge kütüphanenizi tam yetkiyle yönetmeniz için tasarlandı.</p>
         </div>
 
         <div class="feature-grid">
             <div class="feature-card animate-up">
-                <span class="icon-box">🤖</span>
+                <span class="icon-box"><i class="fas fa-robot"></i></span>
                 <h3 data-t="f1Title">Akıllı İsimlendirme Motoru</h3>
                 <p data-t="f1Desc">Dosyalarınız asla karışmaz! Yakalanan medyalar "videoplayback" yerine web sayfası başlığı, sanatçı veya şarkı etiketleri analiz edilerek otomatik ve temiz şekilde isimlendirilir.</p>
             </div>
             <div class="feature-card animate-up delay-1">
-                <span class="icon-box">📦</span>
+                <span class="icon-box"><i class="fas fa-file-archive"></i></span>
                 <h3 data-t="f2Title">Toplu İndirme ve ZIP Arşivi</h3>
                 <p data-t="f2Desc">Onlarca dosyayı tek tek indirmekle uğraşmayın. Seçtiğiniz tüm medyaları ve eğitim paketlerini saniyeler içinde tek bir ZIP arşivi olarak bilgisayarınıza indirin.</p>
             </div>
             <div class="feature-card animate-up delay-2">
-                <span class="icon-box">🔍</span>
+                <span class="icon-box"><i class="fas fa-search-plus"></i></span>
                 <h3 data-t="f3Title">Tek Tıkla Derin Sayfa Taraması</h3>
                 <p data-t="f3Desc">Gizli belgeleri aramakla uğraşmayın! Arayüzdeki "Tara" butonu veya sağ tık menüsü ile sayfa içine gömülü tüm PDF, DOC, MP4 ve MP3 dosyalarını anında listeye çekin.</p>
             </div>
             <div class="feature-card animate-up">
-                <span class="icon-box">🛡️</span>
+                <span class="icon-box"><i class="fas fa-shield-alt"></i></span>
                 <h3 data-t="f4Title">Güçlü Reklam Kalkanı (Ad-Shield)</h3>
                 <p data-t="f4Desc">İndirme listeniz temiz kalsın. Eklenti, reklam ağlarından gelen sahte medya linklerini ve 2MB altındaki sinir bozucu reklam videolarını otomatik olarak filtreler.</p>
             </div>
             <div class="feature-card animate-up delay-1">
-                <span class="icon-box">🎯</span>
+                <span class="icon-box"><i class="fas fa-crosshairs"></i></span>
                 <h3 data-t="f5Title">Siteye Özel Yakalama Kuralları</h3>
                 <p data-t="f5Desc">Her web sitesi için farklı bir kural belirleyin. "Bu sitede sadece Ses dosyalarını yakala", "Sadece Belgeleri göster" veya "Bu siteyi tamamen engelle" diyerek kontrolü elinize alın.</p>
             </div>
             <div class="feature-card animate-up delay-2">
-                <span class="icon-box">🔒</span>
+                <span class="icon-box"><i class="fas fa-user-shield"></i></span>
                 <h3 data-t="f6Title">Açık Kaynak & %100 Gizlilik</h3>
                 <p data-t="f6Desc">Kişisel verileriniz size aittir. Eklentimiz hiçbir kullanıcı verisi toplamaz, dış sunucularla bağlantı kurmaz. Tamamen açık kaynaklıdır ve işlemler cihazınızda gerçekleşir.</p>
+            </div>
+        </div>
+
+        <div class="special-box animate-up">
+            <div style="font-size: 70px; text-shadow: 0 10px 20px rgba(0,0,0,0.5);">🎓</div>
+            <div>
+                <h2 data-t="ebaTitle">Eğitimciler ve Öğrenciler İçin Kusursuz Asistan</h2>
+                <p data-t="ebaDesc">EBA (eba.gov.tr) ve benzeri eğitim platformlarındaki ders videolarını, PDF dokümanlarını ve <b>SCORM etkileşimli eğitim paketlerini</b> saniyeler içinde yakalayın. İçerikleri anlamsız kodlarla değil, gerçek konu ve ders isimleriyle indirerek çevrimdışı materyal arşivinizi saniyeler içinde oluşturun.</p>
+                <div>
+                    <span class="tag">#UzaktanEğitim</span>
+                    <span class="tag">#MateryalGeliştirme</span>
+                    <span class="tag">#EBAUyumlu</span>
+                </div>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>© 2026 Universal Media Grabber Pro. <span data-t="footerVers">Sürüm: 30.1.0</span></p>
-        <div style="margin-top: 15px; font-size: 0.9rem; font-weight: 500;">
-            <a href="https://github.com/muallimun/MediaGrabberPro" style="color:white; text-decoration:none; margin: 0 10px;"><i class="fab fa-github"></i> GitHub</a> | 
-            <a href="https://www.muallimun.com/" style="color:white; text-decoration:none; margin: 0 10px;"><i class="fas fa-globe"></i> Muallimun.Net</a>
+        <div style="margin-bottom: 20px;">
+            <a href="help.html" data-t="footerHelp"><i class="fas fa-book"></i> Kullanım Kılavuzu</a>
+            <a href="privacy.html" data-t="footerPrivacy"><i class="fas fa-user-secret"></i> Gizlilik Politikası</a>
+            <a href="https://github.com/muallimun/MediaGrabberPro" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+            <a href="https://www.muallimun.com/" target="_blank"><i class="fas fa-globe"></i> Muallimun.Net</a>
         </div>
+        <p>© 2026 Universal Media Grabber Pro. <span data-t="footerVers">Sürüm: 30.1.0</span></p>
     </footer>
 
     <script>
@@ -183,6 +227,9 @@
                 heroBadge: "v30.1.0 Yayında! Yeni SCORM & Belge Desteği",
                 heroTitle: "Tüm Dijital İçerikleri<br><span>Tek Tıkla Arşivleyin</span>",
                 heroDesc: "Ses, video, belge ve etkileşimli eğitim paketlerini web sayfalarından anında yakalar. Akıllı isimlendirme, reklam filtresi ve toplu ZIP desteğiyle kusursuz bir indirme deneyimi sunar.",
+                btnChrome: "Chrome İçin Ekle", btnFirefox: "Firefox İçin Ekle",
+                galleryTitle: "Profesyonel Arayüz", galleryDesc: "Kullanıcı dostu menüler ve gelişmiş ayarlar.",
+                gal1: "Hızlı Erişim Menüsü ve Kısayollar", gal2: "Özelleştirilebilir İsimlendirme ve Filtreler", gal3: "Entegre Yardım ve Bilgi Paneli",
                 ebaTitle: "Eğitimciler ve Öğrenciler İçin Kusursuz Asistan",
                 ebaDesc: "EBA (eba.gov.tr) ve benzeri eğitim platformlarındaki ders videolarını, PDF dokümanlarını ve <b>SCORM etkileşimli eğitim paketlerini</b> saniyeler içinde yakalayın. İçerikleri anlamsız kodlarla değil, gerçek konu ve ders isimleriyle indirerek çevrimdışı materyal arşivinizi saniyeler içinde oluşturun.",
                 featTitle: "Sıradan Bir İndiriciden Çok Daha Fazlası",
@@ -193,13 +240,16 @@
                 f4Title: "Güçlü Reklam Kalkanı (Ad-Shield)", f4Desc: "İndirme listeniz temiz kalsın. Eklenti, reklam ağlarından gelen sahte medya linklerini ve 2MB altındaki sinir bozucu reklam videolarını otomatik olarak filtreler.",
                 f5Title: "Siteye Özel Yakalama Kuralları", f5Desc: "Her web sitesi için farklı bir kural belirleyin. 'Sadece Ses yakala', 'Sadece Belgeleri göster' veya 'Bu siteyi tamamen engelle' diyerek kontrolü elinize alın.",
                 f6Title: "Açık Kaynak & %100 Gizlilik", f6Desc: "Kişisel verileriniz size aittir. Eklentimiz veri toplamaz, dış sunucularla bağlantı kurmaz. Tamamen açık kaynaklıdır ve işlemler cihazınızda gerçekleşir.",
-                footerVers: "Sürüm: 30.1.0"
+                footerHelp: "Kullanım Kılavuzu", footerPrivacy: "Gizlilik Politikası", footerVers: "Sürüm: 30.1.0"
             },
             en: {
                 navInstall: "Add to Browser",
                 heroBadge: "v30.1.0 is Live! New SCORM & Doc Support",
                 heroTitle: "Archive Digital Content<br><span>With a Single Click</span>",
                 heroDesc: "Instantly capture audio, video, documents, and interactive learning packages from web pages. Features smart naming, ad blocking, and bulk ZIP archiving for a flawless downloading experience.",
+                btnChrome: "Add to Chrome", btnFirefox: "Add to Firefox",
+                galleryTitle: "Professional Interface", galleryDesc: "User-friendly menus and advanced settings.",
+                gal1: "Quick Access Menu & Shortcuts", gal2: "Customizable Naming & Filters", gal3: "Integrated Help & Info Panel",
                 ebaTitle: "The Perfect Assistant for Educators & Students",
                 ebaDesc: "Instantly capture lesson videos, PDF documents, and <b>interactive SCORM learning packages</b> from educational platforms like EBA (eba.gov.tr). Download contents with their real topic names instead of random codes, building your offline material archive in seconds.",
                 featTitle: "Much More Than an Ordinary Downloader",
@@ -210,13 +260,13 @@
                 f4Title: "Powerful Ad-Shield", f4Desc: "Keep your download list clean. The extension automatically filters out fake media links from ad networks and annoying ad videos under 2MB.",
                 f5Title: "Domain-Specific Rules", f5Desc: "Set different rules for every website. Take control by choosing 'Audio Only', 'Show Documents Only', or 'Mute Completely' for specific sites.",
                 f6Title: "Open Source & 100% Privacy", f6Desc: "Your personal data belongs to you. Our extension collects zero user data and makes no external server connections. It's completely open source.",
-                footerVers: "Version: 30.1.0"
+                footerHelp: "User Guide", footerPrivacy: "Privacy Policy", footerVers: "Version: 30.1.0"
             }
         };
 
         const themeToggle = document.getElementById('themeToggle');
         const langToggle = document.getElementById('langToggle');
-        let currentLang = localStorage.getItem('lang') || 'tr';
+        let currentLang = localStorage.getItem('lang') || (navigator.language.startsWith('tr') ? 'tr' : 'en');
 
         function updateLang() {
             document.querySelectorAll('[data-t]').forEach(el => {
